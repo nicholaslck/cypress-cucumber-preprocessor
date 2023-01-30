@@ -54,6 +54,7 @@ import {
   runStepWithLogGroup,
   runStepWithLogGroupAndCompanionTable,
 } from "./cypress";
+import { attach } from ".";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -478,6 +479,9 @@ function createPickle(
         })
           .then((start) => {
             try {
+              if (pickleStep.argument?.dataTable) {
+                console.log();
+              }
               // return runStepWithLogGroup({
               //   keyword: assertAndReturn(
               //     "keyword" in scenarioStep && scenarioStep.keyword,
