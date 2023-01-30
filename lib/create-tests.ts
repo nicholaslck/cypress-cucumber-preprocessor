@@ -50,7 +50,10 @@ import { indent, stripIndent } from "./helpers/strings";
 
 import { generateSnippet } from "./snippets";
 
-import { runStepWithLogGroup } from "./cypress";
+import {
+  runStepWithLogGroup,
+  runStepWithLogGroupAndCompanionTable,
+} from "./cypress";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -475,14 +478,25 @@ function createPickle(
         })
           .then((start) => {
             try {
-              return runStepWithLogGroup({
-                keyword: assertAndReturn(
-                  "keyword" in scenarioStep && scenarioStep.keyword,
-                  "Expected to find a keyword in the scenario step"
-                ),
-                text,
-                fn: () => registry.runStepDefininition(this, text, argument),
-              }).then((result) => {
+              // return runStepWithLogGroup({
+              //   keyword: assertAndReturn(
+              //     "keyword" in scenarioStep && scenarioStep.keyword,
+              //     "Expected to find a keyword in the scenario step"
+              //   ),
+              //   text,
+              //   fn: () => registry.runStepDefininition(this, text, argument),
+              // })
+              return runStepWithLogGroupAndCompanionTable(
+                {
+                  keyword: assertAndReturn(
+                    "keyword" in scenarioStep && scenarioStep.keyword,
+                    "Expected to find a keyword in the scenario step"
+                  ),
+                  text,
+                  fn: () => registry.runStepDefininition(this, text, argument),
+                },
+                argument as DataTable
+              ).then((result) => {
                 return {
                   start,
                   result,
