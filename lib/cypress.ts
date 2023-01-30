@@ -35,6 +35,7 @@ export function runStepWithLogGroupAndCompanionTable(
   } as object);
 
   Cypress.log({
+    name: "",
     message: table.raw().join("\n"),
     groupStart: false,
   } as object);

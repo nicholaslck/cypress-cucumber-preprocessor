@@ -54,7 +54,6 @@ import {
   runStepWithLogGroup,
   runStepWithLogGroupAndCompanionTable,
 } from "./cypress";
-import { attach } from ".";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -480,32 +479,38 @@ function createPickle(
           .then((start) => {
             try {
               if (pickleStep.argument?.dataTable) {
-                console.log();
-              }
-              // return runStepWithLogGroup({
-              //   keyword: assertAndReturn(
-              //     "keyword" in scenarioStep && scenarioStep.keyword,
-              //     "Expected to find a keyword in the scenario step"
-              //   ),
-              //   text,
-              //   fn: () => registry.runStepDefininition(this, text, argument),
-              // })
-              return runStepWithLogGroupAndCompanionTable(
-                {
+                return runStepWithLogGroupAndCompanionTable(
+                  {
+                    keyword: assertAndReturn(
+                      "keyword" in scenarioStep && scenarioStep.keyword,
+                      "Expected to find a keyword in the scenario step"
+                    ),
+                    text,
+                    fn: () =>
+                      registry.runStepDefininition(this, text, argument),
+                  },
+                  argument as DataTable
+                ).then((result) => {
+                  return {
+                    start,
+                    result,
+                  };
+                });
+              } else {
+                return runStepWithLogGroup({
                   keyword: assertAndReturn(
                     "keyword" in scenarioStep && scenarioStep.keyword,
                     "Expected to find a keyword in the scenario step"
                   ),
                   text,
                   fn: () => registry.runStepDefininition(this, text, argument),
-                },
-                argument as DataTable
-              ).then((result) => {
-                return {
-                  start,
-                  result,
-                };
-              });
+                }).then((result) => {
+                  return {
+                    start,
+                    result,
+                  };
+                });
+              }
             } catch (e) {
               if (e instanceof MissingDefinitionError) {
                 throw new Error(
