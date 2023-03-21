@@ -122,7 +122,7 @@ export async function diagnose(configuration: {
 
     const outputFileName = path.join(
       configuration.cypress.projectRoot,
-      ".output-" + randomPart + ".js"
+      ".output-" + randomPart + ".cjs"
     );
 
     let registry: Registry;
@@ -150,7 +150,7 @@ export async function diagnose(configuration: {
         }
 
         throw new Error(
-          `Failed to compile steø definitions of ${testFile}, with errors shown above...`
+          `Failed to compile step definitions of ${testFile}, with errors shown above...`
         );
       }
 
