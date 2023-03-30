@@ -186,3 +186,32 @@ Feature: diagnostics
              - 'a step' (cypress/support/step_definitions/steps.js:2)
              - /a step/ (cypress/support/step_definitions/steps.js:3)
         """
+
+    Scenario: module package
+      Given a file named "package.json" with:
+        """
+        {
+          "type": "module"
+        }
+        """
+      And a file named "cypress/e2e/a.feature" with:
+        """
+        Feature: a feature name
+          Scenario: a scenario name
+            Given a step
+        """
+      And a file named "cypress/support/step_definitions/steps.js" with:
+        """
+        const { Given } = require("@badeball/cypress-cucumber-preprocessor");
+        Given("a step", function() {});
+        """
+      When I run diagnostics
+      Then the output should contain
+        """
+        ┌────────────────┬─────────────────────────────────────────────┐
+        │ Pattern / Text │ Location                                    │
+        ├────────────────┼─────────────────────────────────────────────┤
+        │ 'a step'       │ cypress/support/step_definitions/steps.js:2 │
+        │   a step       │ cypress/e2e/a.feature:3                     │
+        └────────────────┴─────────────────────────────────────────────┘
+        """
