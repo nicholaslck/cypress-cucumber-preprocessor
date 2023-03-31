@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v16.0.2
+
+- Correct an issue inhibiting users of `type: module` -projects from using the diagnostics utility ([#971](https://github.com/badeball/cypress-cucumber-preprocessor/pull/971)).
+
 ## v16.0.1
 
 - Correctly set `willBeRetried` non-retried tests, fixes [#977](https://github.com/badeball/cypress-cucumber-preprocessor/issues/977).
