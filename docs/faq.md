@@ -8,6 +8,7 @@
 * [I get `cypress_esbuild_preprocessor_1.createBundler is not a function`](#i-get-cypress_esbuild_preprocessor_1createbundler-is-not-a-function)
 * [I get `cypress_esbuild_preprocessor_1.default is not a function`](#i-get-cypress_esbuild_preprocessor_1default-is-not-a-function)
 * [The members `And(..)` and `But(..)` are missing](#function-members-and-and-but-are-missing)
+* [Negated tags / complex tag expressions aren't working as expected](#negated-tags--complex-tag-expressions-arent-working-as-expected)
 
 ## `--env` / `tags` isn't picked up
 
@@ -54,3 +55,7 @@ See answer above.
 ## Function members `And(..)` and `But(..)` are missing
 
 These have been [deprecated](https://github.com/badeball/cypress-cucumber-preprocessor/issues/821). Bear in mind, the `And` keyword can still be used in `.feature` files.
+
+## Negated tags / complex tag expressions aren't working as expected
+
+Windows / CMD.EXE users must be aware that single-quotes bear no special meaning and should not be used to group words in your shell. For these users, only double-quotes should be used for this purpose. What this means is that, for these users, running `cypress run --env tags='not @foo'` <ins>is not going to behave</ins> and double-quotes must be used. Furthermore, similar scripts contained in `package.json` should also use double-quotes (escaped necessarily, as that is JSON).
