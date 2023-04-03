@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v16.0.3
 
 - Update dependency on `@badeball/cypress-configuration`, fixing an issue where specs in node_modules weren't ignored.
 
@@ -24,7 +24,7 @@ All notable changes to this project will be documented in this file.
 
   - ~~If you previously had configured `specPattern` to equal `**/*.feature` (or similar), then you should change it to `cypress/e2e/**/*.feature` in order to not accidentally include feature files located in `node_modules`. This will otherwise interfere with the calculation of the *common ancestor path* and thus step definition resolution.~~
 
-    - This is no longer necessary as of XYZ.
+    - This is no longer necessary as of v16.0.3.
 
 - Use deterministic, internal IDs, fixes [#948](https://github.com/badeball/cypress-cucumber-preprocessor/issues/948) to some degree..
 
