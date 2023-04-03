@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v3
       - id: set-matrix
         name: Prepare
-        run: echo "::set-output name=matrix::$(node -p "JSON.stringify(fs.readdirSync('examples').filter(f => f !== 'readme.md'))")"
+        run: echo "matrix=$(node -p "JSON.stringify(fs.readdirSync('examples').filter(f => f !== 'readme.md'))")" >> $GITHUB_OUTPUT
       - run: npm -v
 
   example:
