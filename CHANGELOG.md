@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Update dependency on `@badeball/cypress-configuration`, fixing an issue where specs in node_modules weren't ignored.
+
 ## v16.0.2
 
 - Correct an issue inhibiting users of `type: module` -projects from using the diagnostics utility ([#971](https://github.com/badeball/cypress-cucumber-preprocessor/pull/971)).
@@ -18,7 +22,9 @@ All notable changes to this project will be documented in this file.
 
   - This removes the options `json.formatter` and `json.args`, which are no longer relevant. With the native components, no child process is spawned.
 
-  - If you previously had configured `specPattern` to equal `**/*.feature` (or similar), then you should change it to `cypress/e2e/**/*.feature` in order to not accidentally include feature files located in `node_modules`. This will otherwise interfere with the calculation of the *common ancestor path* and thus step definition resolution.
+  - ~~If you previously had configured `specPattern` to equal `**/*.feature` (or similar), then you should change it to `cypress/e2e/**/*.feature` in order to not accidentally include feature files located in `node_modules`. This will otherwise interfere with the calculation of the *common ancestor path* and thus step definition resolution.~~
+
+    - This is no longer necessary as of XYZ.
 
 - Use deterministic, internal IDs, fixes [#948](https://github.com/badeball/cypress-cucumber-preprocessor/issues/948) to some degree..
 

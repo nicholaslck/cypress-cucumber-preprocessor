@@ -46,7 +46,7 @@
     "prepublishOnly": "npm run clean && npm run build && npm run test"
   },
   "dependencies": {
-    "@badeball/cypress-configuration": "^4.0.0",
+    "@badeball/cypress-configuration": "^5.0.0",
     "@cucumber/cucumber": "^8.11.1",
     "@cucumber/cucumber-expressions": "^16.0.0",
     "@cucumber/gherkin": "^24.0.0",
