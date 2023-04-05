@@ -1,3 +1,5 @@
+[← Back to documentation](readme.md)
+
 # Installation
 
 ```

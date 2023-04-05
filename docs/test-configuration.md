@@ -1,3 +1,5 @@
+[← Back to documentation](readme.md)
+
 # Test configuration
 
 Some of Cypress' [configuration options](https://docs.cypress.io/guides/references/configuration) can be overridden per-test by leveraging tags. Below are all supported configuration options shown.

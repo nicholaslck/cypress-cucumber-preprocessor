@@ -1,3 +1,5 @@
+[← Back to documentation](readme.md)
+
 # Configuration
 
 The preprocessor uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig), which means you can place configuration options in EG. `.cypress-cucumber-preprocessorrc.json` or `package.json`, with corresponding examples shown below.
