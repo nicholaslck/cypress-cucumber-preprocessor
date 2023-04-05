@@ -24,7 +24,7 @@ The `cypress-tags` executable has been removed and made redundant. Specs contain
 
 ## My JSON report isn't generated
 
-You have likely stumbled upon a configuration caveat, see [docs/configuration.md: Caveats / Debugging](configuration.md#caveats--debugging).
+You may have stumbled upon a configuration caveat (see [docs/configuration.md: Caveats / Debugging](configuration.md#caveats--debugging)) or are overriding some of the plugin's own event handlers (see [docs/event-handlers.md: On event handlers](https://github.com/badeball/cypress-cucumber-preprocessor/blob/master/docs/event-handlers.md)).
 
 ## JSON reports aren't generated in open / interactive mode
 
