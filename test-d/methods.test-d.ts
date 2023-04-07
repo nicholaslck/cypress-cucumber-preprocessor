@@ -11,7 +11,7 @@ import {
   Before,
   After,
   DataTable,
-} from "../methods";
+} from "../lib/methods";
 
 Given("foo", function (foo, bar: number, baz: string) {
   expectType<Mocha.Context>(this);

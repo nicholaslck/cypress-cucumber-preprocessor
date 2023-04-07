@@ -16,7 +16,6 @@
   },
   "include": [
     "lib/**/*.ts",
-    "methods.ts",
     "augmentations.d.ts",
     "declarations.d.ts",
     "browserify.ts",
