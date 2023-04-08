@@ -45,8 +45,6 @@ import { looksLikeOptions, tagToCypressOptions } from "./tag-parser";
 
 import { createTimestamp, duration } from "./messages-helpers";
 
-import { createWeakCache } from "./helpers/maps";
-
 import { indent, stripIndent } from "./helpers/strings";
 
 import { generateSnippet } from "./snippets";
@@ -58,6 +56,7 @@ type Node = ReturnType<typeof parse>;
 interface CompositionContext {
   registry: Registry;
   gherkinDocument: messages.GherkinDocument;
+  astIdsMap: ReturnType<typeof createAstIdMap>;
   pickles: messages.Pickle[];
   testFilter: Node;
   omitFiltered: boolean;
@@ -213,9 +212,6 @@ function createRule(context: CompositionContext, rule: messages.Rule) {
     }
   });
 }
-
-const gherkinDocumentsAstIdMaps = createWeakCache(createAstIdMap);
-
 function createScenario(
   context: CompositionContext,
   scenario: messages.Scenario
@@ -313,8 +309,6 @@ function createPickle(
       testSteps,
     },
   });
-
-  const astIdMap = gherkinDocumentsAstIdMaps.get(gherkinDocument);
 
   if (!testFilter.evaluate(tags) || tags.includes("@skip")) {
     if (!context.omitFiltered) {
@@ -433,7 +427,7 @@ function createPickle(
         );
 
         const scenarioStep = assertAndReturn(
-          astIdMap.get(
+          context.astIdsMap.get(
             assertAndReturn(
               pickleStep.astNodeIds?.[0],
               "Expected to find at least one astNodeId"
@@ -649,6 +643,7 @@ export default function createTests(
   const context: CompositionContext = {
     registry,
     gherkinDocument,
+    astIdsMap: createAstIdMap(gherkinDocument),
     pickles,
     testFilter,
     omitFiltered,
