@@ -589,7 +589,7 @@ export default function createTests(
   messagesEnabled: boolean,
   omitFiltered: boolean,
   stepDefinitionHints: {
-    stepDefinitions: string[];
+    stepDefinitions: string | string[];
     stepDefinitionPatterns: string[];
     stepDefinitionPaths: string[];
   }
@@ -836,6 +836,10 @@ export default function createTests(
     flushMessages(context.messages);
   });
 }
+
+type Tail<T extends any[]> = T extends [infer _A, ...infer R] ? R : never;
+
+export type CreateTestsOptions = Tail<Parameters<typeof createTests>>;
 
 function strictIsInteractive(): boolean {
   const isInteractive = Cypress.config(
