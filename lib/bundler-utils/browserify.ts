@@ -6,9 +6,9 @@ import browserify from "@cypress/browserify-preprocessor";
 
 import { ICypressConfiguration } from "@badeball/cypress-configuration";
 
-import debug from "./lib/debug";
+import debug from "../debug";
 
-import { compile } from "./lib/template";
+import { compile } from "../template";
 
 export function transform(
   configuration: ICypressConfiguration,

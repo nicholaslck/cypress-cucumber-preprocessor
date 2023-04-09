@@ -11,9 +11,8 @@ Feature: hide internals from cypress environment
     And a file named "cypress/support/step_definitions/steps.js" with:
       """
       const { Then } = require("@badeball/cypress-cucumber-preprocessor");
-      const { INTERNAL_SPEC_PROPERTIES } = require("@badeball/cypress-cucumber-preprocessor/lib/constants");
       Then("the visible internal state should be a mere reference", () => {
-        const properties = Cypress.env(INTERNAL_SPEC_PROPERTIES);
+        const properties = Cypress.env("__cypress_cucumber_preprocessor_dont_use_this_spec");
         expect(properties).to.be.a("number");
       });
       """

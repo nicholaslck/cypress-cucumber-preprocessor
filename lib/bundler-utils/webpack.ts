@@ -1,4 +1,4 @@
-import { compile } from "./lib/template";
+import { compile } from "../template";
 
 /**
  * Can be removed once Webpack v5 is supported by Cypress' preprocessor, because Webpack v5 ships

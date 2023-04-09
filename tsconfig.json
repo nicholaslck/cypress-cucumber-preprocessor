@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "node16",
     "resolveJsonModule": true,
     "target": "ES2017",
     "module": "CommonJS",
@@ -17,9 +17,6 @@
   "include": [
     "lib/**/*.ts",
     "augmentations.d.ts",
-    "declarations.d.ts",
-    "browserify.ts",
-    "esbuild.ts",
-    "webpack.ts"
+    "declarations.d.ts"
   ]
 }
