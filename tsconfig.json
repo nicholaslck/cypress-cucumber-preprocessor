@@ -3,6 +3,7 @@
     "files": true
   },
   "compilerOptions": {
+    "outDir": "dist",
     "declaration": true,
     "skipLibCheck": true,
     "strict": true,

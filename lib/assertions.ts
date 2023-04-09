@@ -1,6 +1,6 @@
 import { isString } from "./type-guards";
 
-import { homepage } from "../package.json";
+const homepage = "https://github.com/badeball/cypress-cucumber-preprocessor";
 
 export function createError(message: string) {
   return new Error(

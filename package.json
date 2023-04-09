@@ -14,25 +14,25 @@
     "cypress-preprocessor"
   ],
   "bin": {
-    "cypress-cucumber-diagnostics": "lib/diagnostics/index.js"
+    "cypress-cucumber-diagnostics": "dist/diagnostics/index.js"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "browser": "lib/methods.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "browser": "dist/methods.js",
   "exports": {
     ".": {
-      "node": "./lib/index.js",
-      "types": "./lib/index.d.ts",
-      "browser": "./lib/methods.js"
+      "node": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/methods.js"
     },
-    "./*": "./lib/bundler-utils/*.js"
+    "./*": "./dist/bundler-utils/*.js"
   },
   "files": [
-    "lib/**/*.js",
-    "lib/**/*.d.ts"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
   "scripts": {
-    "clean": "bash -O globstar -c 'rm -f lib/**/*.{js,d.ts} test/**/*.{js,d.ts}'",
+    "clean": "rm -rf dist",
     "build": "tsc",
     "watch": "tsc --watch",
     "fmt": "prettier --ignore-path .gitignore --write '**/*.ts'",
