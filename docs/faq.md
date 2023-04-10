@@ -56,7 +56,9 @@ See answer above.
 
 ## Function members `And(..)` and `But(..)` are missing
 
-These have been [deprecated](https://github.com/badeball/cypress-cucumber-preprocessor/issues/821). Bear in mind, the `And` keyword can still be used in `.feature` files.
+These have been [deprecated](https://github.com/badeball/cypress-cucumber-preprocessor/issues/821) to reflect cucumber-js' behavior. You can still however use the `And` keyword in `.feature` files. As explained on [SO](https://stackoverflow.com/questions/24747464/how-to-use-and-in-a-gherkin-using-cucumber-js#comment38690100_24748612),
+
+> `And` is only used in scenarios, not as step definition methods. Semantically it means "same keyword as in previous step"; technically it is just another step. In fact, you can use `Given()`, `When()` and `Then()` interchangeably in your step definitions, Cucumber will not enforce a match between the step keyword and the step definition function.
 
 ## Negated tags / complex tag expressions aren't working as expected
 
