@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Detect erroneous use of async / await and fail fast, relates to [#903](https://github.com/badeball/cypress-cucumber-preprocessor/issues/903).
+
 ## v16.0.3
 
 - Update dependency on `@badeball/cypress-configuration`, fixing an issue where specs in node_modules weren't ignored.
