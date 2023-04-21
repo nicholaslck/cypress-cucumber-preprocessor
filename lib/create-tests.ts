@@ -926,7 +926,13 @@ function createMissingStepDefinitionMessage(
     () => parameterTypeRegistry.parameterTypes
   )
     .generateExpressions(pickleStep.text)
-    .map((expression) => generateSnippet(expression, parameter))
+    .map((expression) =>
+      generateSnippet(
+        expression,
+        assertAndReturn(pickleStep.type, "Expected pickleStep to have a type"),
+        parameter
+      )
+    )
     .map((snippet) => indent(snippet, { count: 2 }))
     .join("\n\n");
 

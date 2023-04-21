@@ -11,7 +11,11 @@ import {
   RegularExpression,
 } from "@cucumber/cucumber-expressions";
 import { generateMessages } from "@cucumber/gherkin";
-import { IdGenerator, SourceMediaType } from "@cucumber/messages";
+import {
+  IdGenerator,
+  SourceMediaType,
+  PickleStepType,
+} from "@cucumber/messages";
 import * as esbuild from "esbuild";
 import sourceMap from "source-map";
 import { assert, assertAndReturn } from "../assertions";
@@ -34,6 +38,7 @@ export interface DiagnosticStep {
 
 export interface UnmatchedStep {
   step: DiagnosticStep;
+  type: PickleStepType;
   argument: "docString" | "dataTable" | null;
   parameterTypeRegistry: ParameterTypeRegistry;
   stepDefinitionHints: {
@@ -289,6 +294,10 @@ export async function diagnose(configuration: {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 text: step.text!,
               },
+              type: assertAndReturn(
+                step.type,
+                "Expected pickleStep to have a type"
+              ),
               argument,
               parameterTypeRegistry: registry.parameterTypeRegistry,
               stepDefinitionHints: {

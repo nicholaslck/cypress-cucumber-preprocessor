@@ -288,9 +288,16 @@ export function createUnmatchedStep(
       append("");
 
       append(
-        indent(generateSnippet(generatedExpression, unmatch.argument), {
-          count: 2,
-        })
+        indent(
+          generateSnippet(
+            generatedExpression,
+            "Context" as any,
+            unmatch.argument
+          ),
+          {
+            count: 2,
+          }
+        )
       );
     }
   });
