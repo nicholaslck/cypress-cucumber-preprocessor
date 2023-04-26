@@ -1,6 +1,6 @@
 import path from "path";
 
-import glob from "glob";
+import * as glob from "glob";
 
 import util from "util";
 
