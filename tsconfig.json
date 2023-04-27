@@ -16,12 +16,11 @@
   },
   "include": [
     "lib/**/*.ts",
-    "test/**/*.ts",
     "methods.ts",
+    "augmentations.d.ts",
     "declarations.d.ts",
     "browserify.ts",
     "esbuild.ts",
     "webpack.ts"
-  ],
-  "exclude": ["lib/index.test-d.ts"]
+  ]
 }

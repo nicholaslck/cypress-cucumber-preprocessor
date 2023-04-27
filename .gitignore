@@ -2,10 +2,9 @@
 **/*.d.ts
 !examples/**/*
 !features/**/*
-!cucumber.d.ts
 !cucumber.js
+!augmentations.d.ts
 !declarations.d.ts
-!types/index.d.ts
 
 # Temporary directory for test execution
 tmp/

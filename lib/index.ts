@@ -1,5 +1,3 @@
-import messages from "@cucumber/messages";
-
 import DataTable from "./data_table";
 
 import {
@@ -7,17 +5,6 @@ import {
   IParameterTypeDefinition,
   IStepDefinitionBody,
 } from "./types";
-
-declare global {
-  interface Window {
-    testState: {
-      gherkinDocument: messages.GherkinDocument;
-      pickles: messages.Pickle[];
-      pickle: messages.Pickle;
-      pickleStep?: messages.PickleStep;
-    };
-  }
-}
 
 export { resolve as resolvePreprocessorConfiguration } from "./preprocessor-configuration";
 

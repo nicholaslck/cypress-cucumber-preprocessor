@@ -229,16 +229,6 @@ export class Registry {
   }
 }
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace globalThis {
-    // eslint-disable-next-line no-var
-    var __cypress_cucumber_preprocessor_registry_dont_use_this:
-      | Registry
-      | undefined;
-  }
-}
-
 const globalPropertyName =
   "__cypress_cucumber_preprocessor_registry_dont_use_this";
 
@@ -261,7 +251,7 @@ export function freeRegistry() {
   delete globalThis[globalPropertyName];
 }
 
-export function getRegistry() {
+export function getRegistry(): Registry {
   return assertAndReturn(
     globalThis[globalPropertyName],
     "Expected to find a global registry (this usually means you are trying to define steps or hooks in support/e2e.js, which is not supported)"

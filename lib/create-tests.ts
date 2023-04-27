@@ -53,14 +53,6 @@ import { generateSnippet } from "./snippets";
 
 import { runStepWithLogGroup } from "./cypress";
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace globalThis {
-    // eslint-disable-next-line no-var
-    var __cypress_cucumber_preprocessor_dont_use_this: true | undefined;
-  }
-}
-
 type Node = ReturnType<typeof parse>;
 
 interface CompositionContext {

@@ -2,8 +2,6 @@ import { expectType } from "tsd";
 
 import messages from "@cucumber/messages";
 
-import "./";
-
 import {
   Given,
   When,
