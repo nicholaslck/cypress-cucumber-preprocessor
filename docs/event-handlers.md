@@ -16,7 +16,7 @@ These are the event this plugin will subscribe to:
 
 For example, if you specify a handler for `after:screenshot` and override this plugin's handler, then screenshots will no longer be automatically added to JSON reports. This is just one type of issue that can arise by overriding event handlers.
 
-## Workaround
+## Workaround (1)
 
 You can through options, obtain more fine-grained control over event behavior and invoke your own code alongside this plugin, as shown below.
 
@@ -89,3 +89,9 @@ export default defineConfig({
   },
 });
 ```
+
+## Workaround (2)
+
+Alternatively, you can use [cypress-on-fix][cypress-on-fix]. This removes the need for any of the above altogether and works with any plugins (presumably).
+
+[cypress-on-fix]: https://github.com/bahmutov/cypress-on-fix
