@@ -29,11 +29,18 @@ import {
   HOOK_FAILURE_EXPR,
   INTERNAL_PROPERTY_NAME,
   INTERNAL_SUITE_PROPERTIES,
+} from "./constants";
+
+import {
+  ITaskAppendMessages,
+  ITaskCreateStringAttachment,
+  ITaskTestCaseStarted,
+  ITaskTestStepStarted,
   TASK_APPEND_MESSAGES,
   TASK_CREATE_STRING_ATTACHMENT,
   TASK_TEST_CASE_STARTED,
   TASK_TEST_STEP_STARTED,
-} from "./constants";
+} from "./cypress-task-definitions";
 
 import { resolve as origResolve } from "./preprocessor-configuration";
 
@@ -382,37 +389,41 @@ export default async function addCucumberPreprocessorPlugin(
   }
 
   on("task", {
-    [TASK_APPEND_MESSAGES]: (messages: messages.Envelope[]) => {
+    [TASK_APPEND_MESSAGES]: (data: ITaskAppendMessages) => {
       if (!currentSpecMessages) {
         return true;
       }
 
-      currentSpecMessages.push(...messages);
+      currentSpecMessages.push(...data.messages);
 
       return true;
     },
 
-    [TASK_TEST_CASE_STARTED]: (testCaseStartedId) => {
+    [TASK_TEST_CASE_STARTED]: (data: ITaskTestCaseStarted) => {
       if (!currentSpecMessages) {
         return true;
       }
 
-      currentTestCaseStartedId = testCaseStartedId;
+      currentTestCaseStartedId = data.testCaseStartedId;
 
       return true;
     },
 
-    [TASK_TEST_STEP_STARTED]: (testStepStartedId) => {
+    [TASK_TEST_STEP_STARTED]: (data: ITaskTestStepStarted) => {
       if (!currentSpecMessages) {
         return true;
       }
 
-      currentTestStepStartedId = testStepStartedId;
+      currentTestStepStartedId = data.testStepId;
 
       return true;
     },
 
-    [TASK_CREATE_STRING_ATTACHMENT]: ({ data, mediaType, encoding }) => {
+    [TASK_CREATE_STRING_ATTACHMENT]: ({
+      data,
+      mediaType,
+      encoding,
+    }: ITaskCreateStringAttachment) => {
       if (!currentSpecMessages) {
         return true;
       }

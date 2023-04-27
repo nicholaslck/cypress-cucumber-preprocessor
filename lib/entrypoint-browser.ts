@@ -1,4 +1,4 @@
-import { Pickle } from "@cucumber/messages";
+import { AttachmentContentEncoding, Pickle } from "@cucumber/messages";
 
 import parse from "@cucumber/tag-expressions";
 
@@ -8,10 +8,12 @@ import { createError } from "./helpers/assertions";
 
 import { collectTagNames } from "./helpers/ast";
 
+import { INTERNAL_SPEC_PROPERTIES } from "./constants";
+
 import {
-  INTERNAL_SPEC_PROPERTIES,
+  ITaskCreateStringAttachment,
   TASK_CREATE_STRING_ATTACHMENT,
-} from "./constants";
+} from "./cypress-task-definitions";
 
 import { retrieveInternalSpecProperties } from "./browser-runtime";
 
@@ -85,13 +87,15 @@ function defineAfter(
 function createStringAttachment(
   data: string,
   mediaType: string,
-  encoding: "BASE64" | "IDENTITY"
+  encoding: AttachmentContentEncoding
 ) {
-  cy.task(TASK_CREATE_STRING_ATTACHMENT, {
+  const taskData: ITaskCreateStringAttachment = {
     data,
     mediaType,
     encoding,
-  });
+  };
+
+  cy.task(TASK_CREATE_STRING_ATTACHMENT, taskData);
 }
 
 export function attach(data: string | ArrayBuffer, mediaType?: string) {
@@ -99,9 +103,17 @@ export function attach(data: string | ArrayBuffer, mediaType?: string) {
     mediaType = mediaType ?? "text/plain";
 
     if (mediaType.startsWith("base64:")) {
-      createStringAttachment(data, mediaType.replace("base64:", ""), "BASE64");
+      createStringAttachment(
+        data,
+        mediaType.replace("base64:", ""),
+        AttachmentContentEncoding.BASE64
+      );
     } else {
-      createStringAttachment(data, mediaType ?? "text/plain", "IDENTITY");
+      createStringAttachment(
+        data,
+        mediaType ?? "text/plain",
+        AttachmentContentEncoding.IDENTITY
+      );
     }
   } else if (data instanceof ArrayBuffer) {
     if (typeof mediaType !== "string") {
@@ -111,7 +123,7 @@ export function attach(data: string | ArrayBuffer, mediaType?: string) {
     createStringAttachment(
       fromByteArray(new Uint8Array(data)),
       mediaType,
-      "BASE64"
+      AttachmentContentEncoding.BASE64
     );
   } else {
     throw Error("Invalid attachment data: must be a ArrayBuffer or string");

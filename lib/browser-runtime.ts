@@ -32,10 +32,16 @@ import {
   INTERNAL_PROPERTY_NAME,
   INTERNAL_SPEC_PROPERTIES,
   INTERNAL_SUITE_PROPERTIES,
+} from "./constants";
+
+import {
+  ITaskAppendMessages,
+  ITaskTestCaseStarted,
+  ITaskTestStepStarted,
   TASK_APPEND_MESSAGES,
   TASK_TEST_CASE_STARTED,
   TASK_TEST_STEP_STARTED,
-} from "./constants";
+} from "./cypress-task-definitions";
 
 import { getTags } from "./helpers/environment";
 
@@ -127,11 +133,11 @@ function retrieveInternalSuiteProperties():
 
 function flushMessages(messages: CompositionContext["messages"]) {
   if (messages.enabled) {
-    cy.task(
-      TASK_APPEND_MESSAGES,
-      messages.stack.splice(0, messages.stack.length),
-      { log: false }
-    );
+    const data: ITaskAppendMessages = {
+      messages: messages.stack.splice(0, messages.stack.length),
+    };
+
+    cy.task(TASK_APPEND_MESSAGES, data, { log: false });
   }
 }
 
@@ -359,7 +365,9 @@ function createPickle(
     });
 
     if (messages.enabled) {
-      cy.task(TASK_TEST_CASE_STARTED, testCaseStartedId, { log: false });
+      const data: ITaskTestCaseStarted = { testCaseStartedId };
+
+      cy.task(TASK_TEST_CASE_STARTED, data, { log: false });
     }
 
     flushMessages(context.messages);
@@ -388,7 +396,9 @@ function createPickle(
           });
 
           if (messages.enabled) {
-            cy.task(TASK_TEST_STEP_STARTED, hook.id, { log: false });
+            const data: ITaskTestStepStarted = { testStepId: hook.id };
+
+            cy.task(TASK_TEST_STEP_STARTED, data, { log: false });
           }
 
           return cy.wrap(start, { log: false });
@@ -459,7 +469,9 @@ function createPickle(
           });
 
           if (messages.enabled) {
-            cy.task(TASK_TEST_STEP_STARTED, pickleStep.id, { log: false });
+            const data: ITaskTestStepStarted = { testStepId: pickleStep.id };
+
+            cy.task(TASK_TEST_STEP_STARTED, data, { log: false });
           }
 
           return cy.wrap(start, { log: false });
