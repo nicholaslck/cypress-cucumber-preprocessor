@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - More precise snippet suggestions, fixes [#974](https://github.com/badeball/cypress-cucumber-preprocessor/issues/974).
 
+- Report resolved configuration correctly, fixes [#951](https://github.com/badeball/cypress-cucumber-preprocessor/issues/951).
+
 ## v16.0.3
 
 - Update dependency on `@badeball/cypress-configuration`, fixing an issue where specs in node_modules weren't ignored.

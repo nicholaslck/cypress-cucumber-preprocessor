@@ -21,10 +21,10 @@ function hasOwnProperty<X extends Record<string, unknown>, Y extends string>(
   return Object.prototype.hasOwnProperty.call(value, property);
 }
 
-function validateConfigurationEntry(
+function validateUserConfigurationEntry(
   key: string,
   value: Record<string, unknown>
-): Partial<IPreprocessorConfiguration> {
+): Partial<IUserConfiguration> {
   switch (key) {
     case "stepDefinitions":
       if (!isStringOrStringArray(value)) {
@@ -292,7 +292,7 @@ function validateEnvironmentOverrides(
   return overrides;
 }
 
-export function stringToMaybeBoolean(value: string): boolean | undefined {
+function stringToMaybeBoolean(value: string): boolean | undefined {
   if (value === "") {
     return;
   }
@@ -306,8 +306,20 @@ export function stringToMaybeBoolean(value: string): boolean | undefined {
   }
 }
 
-export interface IPreprocessorConfiguration {
-  readonly stepDefinitions: string | string[];
+interface IEnvironmentOverrides {
+  stepDefinitions?: string | string[];
+  messagesEnabled?: boolean;
+  messagesOutput?: string;
+  jsonEnabled?: boolean;
+  jsonOutput?: string;
+  htmlEnabled?: boolean;
+  htmlOutput?: string;
+  filterSpecs?: boolean;
+  omitFiltered?: boolean;
+}
+
+export interface IUserConfiguration {
+  readonly stepDefinitions?: string | string[];
   readonly messages?: {
     enabled: boolean;
     output?: string;
@@ -322,114 +334,95 @@ export interface IPreprocessorConfiguration {
   };
   readonly filterSpecs?: boolean;
   readonly omitFiltered?: boolean;
+}
+
+export interface IPreprocessorConfiguration {
+  readonly stepDefinitions: string | string[];
+  readonly messages: {
+    enabled: boolean;
+    output: string;
+  };
+  readonly json: {
+    enabled: boolean;
+    output: string;
+  };
+  readonly html: {
+    enabled: boolean;
+    output: string;
+  };
+  readonly filterSpecs: boolean;
+  readonly omitFiltered: boolean;
   readonly implicitIntegrationFolder: string;
 }
 
-export interface IEnvironmentOverrides {
-  stepDefinitions?: string | string[];
-  messagesEnabled?: boolean;
-  messagesOutput?: string;
-  jsonEnabled?: boolean;
-  jsonOutput?: string;
-  htmlEnabled?: boolean;
-  htmlOutput?: string;
-  filterSpecs?: boolean;
-  omitFiltered?: boolean;
-}
-
-export const DEFAULT_STEP_DEFINITIONS = [
+const DEFAULT_STEP_DEFINITIONS = [
   "[integration-directory]/[filepath]/**/*.{js,mjs,ts,tsx}",
   "[integration-directory]/[filepath].{js,mjs,ts,tsx}",
   "cypress/support/step_definitions/**/*.{js,mjs,ts,tsx}",
 ];
 
-export class PreprocessorConfiguration implements IPreprocessorConfiguration {
-  constructor(
-    private explicitValues: Partial<IPreprocessorConfiguration>,
-    private environmentOverrides: IEnvironmentOverrides,
-    private cypressConfiguration: ICypressConfiguration,
-    public implicitIntegrationFolder: string
-  ) {}
-
-  get stepDefinitions() {
-    const explicit =
-      this.environmentOverrides.stepDefinitions ??
-      this.explicitValues.stepDefinitions;
-
-    if (explicit) {
-      return explicit;
-    }
-
-    const config = this.cypressConfiguration;
-
-    return DEFAULT_STEP_DEFINITIONS.map((pattern) =>
-      pattern.replace(
-        "[integration-directory]",
-        ensureIsRelative(
-          config.projectRoot,
-          "integrationFolder" in config
-            ? config.integrationFolder
-            : this.implicitIntegrationFolder
-        )
+export function combineIntoConfiguration(
+  configuration: IUserConfiguration,
+  overrides: IEnvironmentOverrides,
+  cypress: ICypressConfiguration,
+  implicitIntegrationFolder: string
+): IPreprocessorConfiguration {
+  const defaultStepDefinitions = DEFAULT_STEP_DEFINITIONS.map((pattern) =>
+    pattern.replace(
+      "[integration-directory]",
+      ensureIsRelative(
+        cypress.projectRoot,
+        "integrationFolder" in cypress
+          ? cypress.integrationFolder
+          : implicitIntegrationFolder
       )
-    );
-  }
+    )
+  );
 
-  get messages() {
-    return {
-      enabled:
-        this.json.enabled ||
-        this.html.enabled ||
-        (this.environmentOverrides.messagesEnabled ??
-          this.explicitValues.messages?.enabled ??
-          false),
-      output:
-        this.environmentOverrides.messagesOutput ??
-        this.explicitValues.messages?.output ??
-        "cucumber-messages.ndjson",
-    };
-  }
+  const stepDefinitions: IPreprocessorConfiguration["stepDefinitions"] =
+    overrides.stepDefinitions ??
+    configuration.stepDefinitions ??
+    defaultStepDefinitions;
 
-  get json() {
-    return {
-      enabled:
-        this.environmentOverrides.jsonEnabled ??
-        this.explicitValues.json?.enabled ??
-        false,
-      output:
-        this.environmentOverrides.jsonOutput ??
-        (this.explicitValues.json?.output || "cucumber-report.json"),
-    };
-  }
+  const json: IPreprocessorConfiguration["json"] = {
+    enabled: overrides.jsonEnabled ?? configuration.json?.enabled ?? false,
+    output:
+      overrides.jsonOutput ??
+      (configuration.json?.output || "cucumber-report.json"),
+  };
 
-  get html() {
-    return {
-      enabled:
-        this.environmentOverrides.htmlEnabled ??
-        this.explicitValues.html?.enabled ??
-        false,
-      output:
-        this.environmentOverrides.htmlOutput ??
-        this.explicitValues.html?.output ??
-        "cucumber-report.html",
-    };
-  }
+  const html: IPreprocessorConfiguration["html"] = {
+    enabled: overrides.htmlEnabled ?? configuration.html?.enabled ?? false,
+    output:
+      overrides.htmlOutput ??
+      (configuration.html?.output || "cucumber-report.html"),
+  };
 
-  get filterSpecs() {
-    return (
-      this.environmentOverrides.filterSpecs ??
-      this.explicitValues.filterSpecs ??
-      false
-    );
-  }
+  const messages: IPreprocessorConfiguration["messages"] = {
+    enabled:
+      json.enabled ||
+      html.enabled ||
+      (overrides.messagesEnabled ?? configuration.messages?.enabled ?? false),
+    output:
+      overrides.messagesOutput ??
+      (configuration.messages?.output || "cucumber-messages.ndjson"),
+  };
 
-  get omitFiltered() {
-    return (
-      this.environmentOverrides.omitFiltered ??
-      this.explicitValues.omitFiltered ??
-      false
-    );
-  }
+  const filterSpecs: IPreprocessorConfiguration["filterSpecs"] =
+    overrides.filterSpecs ?? configuration.filterSpecs ?? false;
+
+  const omitFiltered: IPreprocessorConfiguration["omitFiltered"] =
+    overrides.omitFiltered ?? configuration.omitFiltered ?? false;
+
+  return {
+    stepDefinitions,
+    messages,
+    json,
+    html,
+    filterSpecs,
+    omitFiltered,
+    implicitIntegrationFolder,
+  };
 }
 
 async function cosmiconfigResolver(projectRoot: string) {
@@ -449,10 +442,14 @@ export async function resolve(
   environment: Record<string, unknown>,
   implicitIntegrationFolder: string,
   configurationFileResolver: ConfigurationFileResolver = cosmiconfigResolver
-) {
+): Promise<IPreprocessorConfiguration> {
   const result = await configurationFileResolver(cypressConfig.projectRoot);
 
   const environmentOverrides = validateEnvironmentOverrides(environment);
+
+  debug(`resolved environment overrides ${util.inspect(environmentOverrides)}`);
+
+  let explicitConfiguration: Partial<IUserConfiguration>;
 
   if (result) {
     if (typeof result !== "object" || result == null) {
@@ -463,29 +460,32 @@ export async function resolve(
       );
     }
 
-    const config: Partial<IPreprocessorConfiguration> = Object.assign(
+    explicitConfiguration = Object.assign(
       {},
       ...Object.entries(result).map((entry) =>
-        validateConfigurationEntry(...entry)
+        validateUserConfigurationEntry(...entry)
       )
     );
 
-    debug(`resolved configuration ${util.inspect(config)}`);
-
-    return new PreprocessorConfiguration(
-      config,
-      environmentOverrides,
-      cypressConfig,
-      implicitIntegrationFolder
+    debug(
+      `resolved explicit user configuration ${util.inspect(
+        explicitConfiguration
+      )}`
     );
   } else {
-    debug("resolved no configuration");
+    explicitConfiguration = {};
 
-    return new PreprocessorConfiguration(
-      {},
-      environmentOverrides,
-      cypressConfig,
-      implicitIntegrationFolder
-    );
+    debug("resolved no explicit user configuration");
   }
+
+  const configuration = combineIntoConfiguration(
+    explicitConfiguration,
+    environmentOverrides,
+    cypressConfig,
+    implicitIntegrationFolder
+  );
+
+  debug(`resolved configuration ${util.inspect(configuration)}`);
+
+  return configuration;
 }

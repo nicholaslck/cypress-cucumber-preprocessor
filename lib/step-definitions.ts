@@ -72,7 +72,10 @@ export function getStepDefinitionPatterns(
 export function getStepDefinitionPatternsPost10(
   configuration: {
     cypress: Pick<ICypressPost10Configuration, "projectRoot">;
-    preprocessor: IPreprocessorConfiguration;
+    preprocessor: Pick<
+      IPreprocessorConfiguration,
+      "stepDefinitions" | "implicitIntegrationFolder"
+    >;
   },
   filepath: string
 ): string[] {
@@ -128,7 +131,7 @@ export function getStepDefinitionPatternsPre10(
       ICypressPre10Configuration,
       "projectRoot" | "integrationFolder"
     >;
-    preprocessor: IPreprocessorConfiguration;
+    preprocessor: Pick<IPreprocessorConfiguration, "stepDefinitions">;
   },
   filepath: string
 ): string[] {
