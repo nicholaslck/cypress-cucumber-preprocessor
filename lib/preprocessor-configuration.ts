@@ -47,7 +47,7 @@ function validateConfigurationEntry(
       ) {
         throw new Error(
           `Expected a boolean (messages.enabled), but got ${util.inspect(
-            value
+            value.enabled
           )}`
         );
       }
@@ -58,7 +58,7 @@ function validateConfigurationEntry(
         } else {
           throw new Error(
             `Expected a string (messages.output), but got ${util.inspect(
-              value
+              value.output
             )}`
           );
         }
@@ -80,7 +80,9 @@ function validateConfigurationEntry(
         typeof value.enabled !== "boolean"
       ) {
         throw new Error(
-          `Expected a boolean (json.enabled), but got ${util.inspect(value)}`
+          `Expected a boolean (json.enabled), but got ${util.inspect(
+            value.enabled
+          )}`
         );
       }
       let output: string | undefined;
@@ -89,7 +91,9 @@ function validateConfigurationEntry(
           output = value.output;
         } else {
           throw new Error(
-            `Expected a string (json.output), but got ${util.inspect(value)}`
+            `Expected a string (json.output), but got ${util.inspect(
+              value.output
+            )}`
           );
         }
       }
@@ -110,7 +114,9 @@ function validateConfigurationEntry(
         typeof value.enabled !== "boolean"
       ) {
         throw new Error(
-          `Expected a boolean (html.enabled), but got ${util.inspect(value)}`
+          `Expected a boolean (html.enabled), but got ${util.inspect(
+            value.enabled
+          )}`
         );
       }
       let output: string | undefined;
@@ -119,7 +125,9 @@ function validateConfigurationEntry(
           output = value.output;
         } else {
           throw new Error(
-            `Expected a string (html.output), but got ${util.inspect(value)}`
+            `Expected a string (html.output), but got ${util.inspect(
+              value.output
+            )}`
           );
         }
       }
