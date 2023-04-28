@@ -407,6 +407,7 @@ function createPickle(
             runStepWithLogGroup({
               fn: () => registry.runHook(this, hook),
               keyword: hook.keyword,
+              text: hook.tags,
             });
 
             return cy.wrap(start, { log: false });

@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 - Report resolved configuration correctly, fixes [#951](https://github.com/badeball/cypress-cucumber-preprocessor/issues/951).
 
+- Visualize hook filters properly, fixes [#922](https://github.com/badeball/cypress-cucumber-preprocessor/issues/922).
+
 ## v16.0.3
 
 - Update dependency on `@badeball/cypress-configuration`, fixing an issue where specs in node_modules weren't ignored.

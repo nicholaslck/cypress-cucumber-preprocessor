@@ -41,6 +41,7 @@ export type HookKeyword = "Before" | "After";
 
 export interface IHook {
   id: string;
+  tags?: string;
   node: ReturnType<typeof parse>;
   implementation: IHookBody;
   keyword: HookKeyword;
@@ -57,6 +58,7 @@ function parseHookArguments(
 ): IHook {
   return {
     id: uuid(),
+    tags: options.tags,
     node: options.tags ? parse(options.tags) : noopNode,
     implementation: fn,
     keyword,
