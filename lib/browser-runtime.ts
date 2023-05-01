@@ -57,7 +57,10 @@ import { indent, stripIndent } from "./helpers/strings";
 
 import { generateSnippet } from "./helpers/snippets";
 
-import { runStepWithLogGroup } from "./helpers/cypress";
+import {
+  runStepWithLogGroup,
+  runStepWithLogGroupAndCompanionTable,
+} from "./helpers/cypress";
 
 import { getTags } from "./helpers/environment";
 
