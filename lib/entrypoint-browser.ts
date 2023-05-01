@@ -4,7 +4,7 @@ import parse from "@cucumber/tag-expressions";
 
 import { fromByteArray } from "base64-js";
 
-import { createError } from "./helpers/assertions";
+import { createError } from "./helpers/error";
 
 import { collectTagNames } from "./helpers/ast";
 

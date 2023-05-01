@@ -30,7 +30,7 @@ You may have stumbled upon a configuration caveat (see [docs/configuration.md: C
 
 ## JSON reports aren't generated in open / interactive mode
 
-JSON reports aren't typically generated in open / interactive mode. They rely on some events that aren't available in open-mode, at least not without `experimentalInteractiveRunEvents: true`. However, this experimental flag broke some time ago, ref. [cypress-io/cypress#18955](https://github.com/cypress-io/cypress/issues/18955).
+JSON reports aren't generated in open / interactive mode. They rely on some events that aren't available in open-mode, at least not without `experimentalInteractiveRunEvents: true`. However, this experimental flag broke some time ago, ref. [cypress-io/cypress#18955](https://github.com/cypress-io/cypress/issues/18955), [cypress-io/cypress#26634](https://github.com/cypress-io/cypress/issues/26634). There's unfortunately little indication that these issues will be fixed and meanwhile reports will not be available in open / interactive mode.
 
 ## I get `cypress_esbuild_preprocessor_1.createBundler is not a function`
 

@@ -1,12 +1,6 @@
+import { createError } from "./error";
+
 import { isString } from "./type-guards";
-
-const homepage = "https://github.com/badeball/cypress-cucumber-preprocessor";
-
-export function createError(message: string) {
-  return new Error(
-    `${message} (this might be a bug, please report at ${homepage})`
-  );
-}
 
 export function fail(message: string) {
   throw createError(message);

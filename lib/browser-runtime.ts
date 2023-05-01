@@ -1,10 +1,11 @@
-import messages, { TestStepResultStatus } from "@cucumber/messages";
+import * as messages from "@cucumber/messages";
 
 import parse from "@cucumber/tag-expressions";
 
 import {
   CucumberExpressionGenerator,
   ParameterTypeRegistry,
+  RegularExpression,
 } from "@cucumber/cucumber-expressions";
 
 import { v4 as uuid } from "uuid";
@@ -29,21 +30,22 @@ import {
 
 import {
   HOOK_FAILURE_EXPR,
-  INTERNAL_PROPERTY_NAME,
   INTERNAL_SPEC_PROPERTIES,
   INTERNAL_SUITE_PROPERTIES,
 } from "./constants";
 
 import {
-  ITaskAppendMessages,
+  ITaskSpecEnvelopes,
   ITaskTestCaseStarted,
+  ITaskTestCaseFinished,
   ITaskTestStepStarted,
-  TASK_APPEND_MESSAGES,
+  ITaskTestStepFinished,
+  TASK_SPEC_ENVELOPES,
   TASK_TEST_CASE_STARTED,
+  TASK_TEST_CASE_FINISHED,
   TASK_TEST_STEP_STARTED,
+  TASK_TEST_STEP_FINISHED,
 } from "./cypress-task-definitions";
-
-import { getTags } from "./helpers/environment";
 
 import { notNull } from "./helpers/type-guards";
 
@@ -57,6 +59,8 @@ import { generateSnippet } from "./helpers/snippets";
 
 import { runStepWithLogGroup } from "./helpers/cypress";
 
+import { getTags } from "./helpers/environment";
+
 type Node = ReturnType<typeof parse>;
 
 interface CompositionContext {
@@ -64,12 +68,10 @@ interface CompositionContext {
   gherkinDocument: messages.GherkinDocument;
   astIdsMap: ReturnType<typeof createAstIdMap>;
   pickles: messages.Pickle[];
+  specEnvelopes: messages.Envelope[];
   testFilter: Node;
   omitFiltered: boolean;
-  messages: {
-    enabled: boolean;
-    stack: messages.Envelope[];
-  };
+  messagesEnabled: boolean;
   stepDefinitionHints: {
     stepDefinitions: string | string[];
     stepDefinitionPatterns: string[];
@@ -131,14 +133,34 @@ function retrieveInternalSuiteProperties():
   return Cypress.env(INTERNAL_SUITE_PROPERTIES);
 }
 
-function flushMessages(messages: CompositionContext["messages"]) {
-  if (messages.enabled) {
-    const data: ITaskAppendMessages = {
-      messages: messages.stack.splice(0, messages.stack.length),
-    };
+function taskSpecEnvelopes(messages: messages.Envelope[]) {
+  cy.task(TASK_SPEC_ENVELOPES, { messages } as ITaskSpecEnvelopes, {
+    log: false,
+  });
+}
 
-    cy.task(TASK_APPEND_MESSAGES, data, { log: false });
-  }
+function taskTestCaseStarted(testCaseStarted: messages.TestCaseStarted) {
+  cy.task(TASK_TEST_CASE_STARTED, testCaseStarted as ITaskTestCaseStarted, {
+    log: false,
+  });
+}
+
+function taskTestCaseFinished(testCasefinished: messages.TestCaseFinished) {
+  cy.task(TASK_TEST_CASE_FINISHED, testCasefinished as ITaskTestCaseFinished, {
+    log: false,
+  });
+}
+
+function taskTestStepStarted(testStepStarted: messages.TestStepStarted) {
+  cy.task(TASK_TEST_STEP_STARTED, testStepStarted as ITaskTestStepStarted, {
+    log: false,
+  });
+}
+
+function taskTestStepFinished(testStepfinished: messages.TestStepFinished) {
+  cy.task(TASK_TEST_STEP_FINISHED, testStepfinished as ITaskTestStepFinished, {
+    log: false,
+  });
 }
 
 function findPickleById(context: CompositionContext, astId: string) {
@@ -165,6 +187,18 @@ function collectExampleIds(examples: readonly messages.Examples[]) {
 
 function createFeature(context: CompositionContext, feature: messages.Feature) {
   describe(feature.name || "<unamed feature>", () => {
+    before(function () {
+      beforeHandler.call(this, context);
+    });
+
+    beforeEach(function () {
+      beforeEachHandler.call(this, context);
+    });
+
+    afterEach(function () {
+      afterEachHandler.call(this, context);
+    });
+
     if (feature.children) {
       for (const child of feature.children) {
         if (child.scenario) {
@@ -227,14 +261,11 @@ function createScenario(
 
     for (let i = 0; i < exampleIds.length; i++) {
       const exampleId = exampleIds[i];
-
       const pickle = findPickleById(context, exampleId);
-
       const baseName = pickle.name || "<unamed scenario>";
-
       const exampleName = `${baseName} (example #${i + 1})`;
 
-      createPickle(context, { ...scenario, name: exampleName }, pickle);
+      createPickle(context, { ...pickle, name: exampleName });
     }
   } else {
     const scenarioId = assertAndReturn(
@@ -244,77 +275,24 @@ function createScenario(
 
     const pickle = findPickleById(context, scenarioId);
 
-    createPickle(context, scenario, pickle);
+    createPickle(context, pickle);
   }
 }
 
-function createPickle(
-  context: CompositionContext,
-  scenario: messages.Scenario,
-  pickle: messages.Pickle
-) {
-  const { registry, gherkinDocument, pickles, testFilter, messages } = context;
-  const testCaseId = uuid();
+function createPickle(context: CompositionContext, pickle: messages.Pickle) {
+  const { registry, gherkinDocument, pickles, testFilter } = context;
+  const testCaseId = pickle.id;
   const pickleSteps = pickle.steps ?? [];
-  const scenarioName = scenario.name || "<unamed scenario>";
+  const scenarioName = pickle.name || "<unamed scenario>";
   const tags = collectTagNames(pickle.tags);
   const beforeHooks = registry.resolveBeforeHooks(tags);
   const afterHooks = registry.resolveAfterHooks(tags);
-  const definitionIds = pickleSteps.map(() => uuid());
 
   const steps: IStep[] = [
     ...beforeHooks.map((hook) => ({ hook })),
     ...pickleSteps.map((pickleStep) => ({ pickleStep })),
     ...afterHooks.map((hook) => ({ hook })),
   ];
-
-  // TODO: Why am I doing this? For example, an undefined step should not resolve to a step definition with location "not available:0".
-  for (const id of definitionIds) {
-    messages.stack.push({
-      stepDefinition: {
-        id,
-        pattern: {
-          source: "a step",
-          type: "CUCUMBER_EXPRESSION" as unknown as messages.StepDefinitionPatternType.CUCUMBER_EXPRESSION,
-        },
-        sourceReference,
-      },
-    });
-  }
-
-  const testSteps: messages.TestStep[] = [];
-
-  for (const beforeHook of beforeHooks) {
-    testSteps.push({
-      id: beforeHook.id,
-      hookId: beforeHook.id,
-    });
-  }
-
-  for (let i = 0; i < pickleSteps.length; i++) {
-    const step = pickleSteps[i];
-
-    testSteps.push({
-      id: step.id,
-      pickleStepId: step.id,
-      stepDefinitionIds: [definitionIds[i]],
-    });
-  }
-
-  for (const afterHook of afterHooks) {
-    testSteps.push({
-      id: afterHook.id,
-      hookId: afterHook.id,
-    });
-  }
-
-  messages.stack.push({
-    testCase: {
-      id: testCaseId,
-      pickleId: pickle.id,
-      testSteps,
-    },
-  });
 
   if (!testFilter.evaluate(tags) || tags.includes("@skip")) {
     if (!context.omitFiltered) {
@@ -353,24 +331,14 @@ function createPickle(
     const { remainingSteps, testCaseStartedId } =
       retrieveInternalSpecProperties();
 
-    assignRegistry(registry);
-
-    messages.stack.push({
-      testCaseStarted: {
+    if (context.messagesEnabled) {
+      taskTestCaseStarted({
         id: testCaseStartedId,
         testCaseId,
         attempt: attempt++,
         timestamp: createTimestamp(),
-      },
-    });
-
-    if (messages.enabled) {
-      const data: ITaskTestCaseStarted = { testCaseStartedId };
-
-      cy.task(TASK_TEST_CASE_STARTED, data, { log: false });
+      });
     }
-
-    flushMessages(context.messages);
 
     window.testState = {
       gherkinDocument,
@@ -387,18 +355,12 @@ function createPickle(
 
           const start = createTimestamp();
 
-          messages.stack.push({
-            testStepStarted: {
+          if (context.messagesEnabled) {
+            taskTestStepStarted({
               testStepId: hook.id,
               testCaseStartedId,
               timestamp: start,
-            },
-          });
-
-          if (messages.enabled) {
-            const data: ITaskTestStepStarted = { testStepId: hook.id };
-
-            cy.task(TASK_TEST_STEP_STARTED, data, { log: false });
+            });
           }
 
           return cy.wrap(start, { log: false });
@@ -415,17 +377,17 @@ function createPickle(
           .then((start) => {
             const end = createTimestamp();
 
-            messages.stack.push({
-              testStepFinished: {
+            if (context.messagesEnabled) {
+              taskTestStepFinished({
                 testStepId: hook.id,
                 testCaseStartedId,
                 testStepResult: {
-                  status: TestStepResultStatus.PASSED,
+                  status: messages.TestStepResultStatus.PASSED,
                   duration: duration(start, end),
                 },
                 timestamp: end,
-              },
-            });
+              });
+            }
 
             remainingSteps.shift();
           });
@@ -461,18 +423,12 @@ function createPickle(
 
           const start = createTimestamp();
 
-          messages.stack.push({
-            testStepStarted: {
+          if (context.messagesEnabled) {
+            taskTestStepStarted({
               testStepId: pickleStep.id,
               testCaseStartedId,
               timestamp: start,
-            },
-          });
-
-          if (messages.enabled) {
-            const data: ITaskTestStepStarted = { testStepId: pickleStep.id };
-
-            cy.task(TASK_TEST_STEP_STARTED, data, { log: false });
+            });
           }
 
           return cy.wrap(start, { log: false });
@@ -510,67 +466,63 @@ function createPickle(
             const end = createTimestamp();
 
             if (result === "pending") {
-              messages.stack.push({
-                testStepFinished: {
+              if (context.messagesEnabled) {
+                taskTestStepFinished({
                   testStepId: pickleStep.id,
                   testCaseStartedId,
                   testStepResult: {
-                    status: TestStepResultStatus.PENDING,
+                    status: messages.TestStepResultStatus.PENDING,
                     duration: duration(start, end),
                   },
                   timestamp: end,
-                },
-              });
+                });
 
-              remainingSteps.shift();
+                remainingSteps.shift();
 
-              for (const skippedStep of remainingSteps) {
-                const testStepId = assertAndReturn(
-                  skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
-                  "Expected a step to either be a hook or a pickleStep"
-                );
+                for (const skippedStep of remainingSteps) {
+                  const testStepId = assertAndReturn(
+                    skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
+                    "Expected a step to either be a hook or a pickleStep"
+                  );
 
-                messages.stack.push({
-                  testStepStarted: {
+                  taskTestStepStarted({
                     testStepId,
                     testCaseStartedId,
                     timestamp: createTimestamp(),
-                  },
-                });
+                  });
 
-                messages.stack.push({
-                  testStepFinished: {
+                  taskTestStepFinished({
                     testStepId,
                     testCaseStartedId,
                     testStepResult: {
-                      status: TestStepResultStatus.SKIPPED,
+                      status: messages.TestStepResultStatus.SKIPPED,
                       duration: {
                         seconds: 0,
                         nanos: 0,
                       },
                     },
                     timestamp: createTimestamp(),
-                  },
-                });
+                  });
+                }
               }
 
               for (let i = 0, count = remainingSteps.length; i < count; i++) {
                 remainingSteps.pop();
               }
 
-              this.skip();
+              cy.then(() => this.skip());
             } else {
-              messages.stack.push({
-                testStepFinished: {
+              if (context.messagesEnabled) {
+                taskTestStepFinished({
                   testStepId: pickleStep.id,
                   testCaseStartedId,
                   testStepResult: {
-                    status: TestStepResultStatus.PASSED,
+                    status: messages.TestStepResultStatus.PASSED,
                     duration: duration(start, end),
                   },
                   timestamp: end,
-                },
-              });
+                });
+              }
 
               remainingSteps.shift();
             }
@@ -594,106 +546,45 @@ function collectTagNamesFromGherkinDocument(
   return tagNames;
 }
 
-export default function createTests(
-  registry: Registry,
-  source: string,
+function createTestFilter(
   gherkinDocument: messages.GherkinDocument,
-  pickles: messages.Pickle[],
-  messagesEnabled: boolean,
-  omitFiltered: boolean,
-  stepDefinitionHints: {
-    stepDefinitions: string | string[];
-    stepDefinitionPatterns: string[];
-    stepDefinitionPaths: string[];
-  }
-) {
-  const noopNode = { evaluate: () => true };
-  const environmentTags = getTags(Cypress.env());
-  const messages: messages.Envelope[] = [];
-
-  messages.push({
-    source: {
-      data: source,
-      uri: assertAndReturn(
-        gherkinDocument.uri,
-        "Expected gherkin document to have URI"
-      ),
-      mediaType:
-        "text/x.cucumber.gherkin+plain" as messages.SourceMediaType.TEXT_X_CUCUMBER_GHERKIN_PLAIN,
-    },
-  });
-
-  messages.push({
-    gherkinDocument: {
-      ...gherkinDocument,
-    },
-  });
-
-  for (const pickle of pickles) {
-    messages.push({
-      pickle,
-    });
-  }
-
-  for (const hook of [...registry.beforeHooks, ...registry.afterHooks]) {
-    messages.push({
-      hook: {
-        id: hook.id,
-        sourceReference,
-      },
-    });
-  }
-
+  environment: Cypress.ObjectLike
+): Node {
   const tagsInDocument = collectTagNamesFromGherkinDocument(gherkinDocument);
 
-  const testFilter =
-    tagsInDocument.includes("@only") || tagsInDocument.includes("@focus")
-      ? parse("@only or @focus")
-      : environmentTags
-      ? parse(environmentTags)
-      : noopNode;
-
-  const context: CompositionContext = {
-    registry,
-    gherkinDocument,
-    astIdsMap: createAstIdMap(gherkinDocument),
-    pickles,
-    testFilter,
-    omitFiltered,
-    messages: {
-      enabled: messagesEnabled,
-      stack: messages,
-    },
-    stepDefinitionHints,
-  };
-
-  if (gherkinDocument.feature) {
-    createFeature(context, gherkinDocument.feature);
-  }
-
-  const isHooksAttached = globalThis[INTERNAL_PROPERTY_NAME];
-
-  if (isHooksAttached) {
-    return;
+  if (tagsInDocument.includes("@only") || tagsInDocument.includes("@focus")) {
+    return parse("@only or @focus");
   } else {
-    globalThis[INTERNAL_PROPERTY_NAME] = true;
+    const tags = getTags(environment);
+
+    return tags ? parse(tags) : { evaluate: () => true };
+  }
+}
+
+function beforeHandler(context: CompositionContext) {
+  if (!retrieveInternalSuiteProperties()?.isEventHandlersAttached) {
+    fail(
+      "Missing preprocessor event handlers (this usally means you've not invoked `addCucumberPreprocessorPlugin()` or not returned the config object in `setupNodeEvents()`)"
+    );
   }
 
-  before(function () {
-    if (!retrieveInternalSuiteProperties()?.isEventHandlersAttached) {
-      fail(
-        "Missing preprocessor event handlers (this usally means you've not invoked `addCucumberPreprocessorPlugin()` or not returned the config object in `setupNodeEvents()`)"
-      );
-    }
-  });
+  if (context.messagesEnabled) {
+    taskSpecEnvelopes(context.specEnvelopes);
+  }
+}
 
-  afterEach(function () {
-    freeRegistry();
+function beforeEachHandler(context: CompositionContext) {
+  assignRegistry(context.registry);
+}
 
-    const properties = retrieveInternalSpecProperties();
+function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
+  freeRegistry();
 
-    const { testCaseStartedId, remainingSteps } = properties;
+  const properties = retrieveInternalSpecProperties();
 
+  const { testCaseStartedId, remainingSteps } = properties;
+
+  if (context.messagesEnabled) {
     const endTimestamp = createTimestamp();
 
     if (remainingSteps.length > 0) {
@@ -717,29 +608,25 @@ export default function createTests(
           "Expected a step to either be a hook or a pickleStep"
         );
 
-        const failedTestStepFinished: messages.Envelope = error.includes(
-          "Step implementation missing"
-        )
-          ? {
-              testStepFinished: {
+        const failedTestStepFinished: messages.TestStepFinished =
+          error.includes("Step implementation missing")
+            ? {
                 testStepId,
                 testCaseStartedId,
                 testStepResult: {
-                  status: TestStepResultStatus.UNDEFINED,
+                  status: messages.TestStepResultStatus.UNDEFINED,
                   duration: {
                     seconds: 0,
                     nanos: 0,
                   },
                 },
                 timestamp: endTimestamp,
-              },
-            }
-          : {
-              testStepFinished: {
+              }
+            : {
                 testStepId,
                 testCaseStartedId,
                 testStepResult: {
-                  status: TestStepResultStatus.FAILED,
+                  status: messages.TestStepResultStatus.FAILED,
                   message: this.currentTest?.err?.message,
                   // TODO: Create a proper duration from when the step started.
                   duration: {
@@ -748,10 +635,9 @@ export default function createTests(
                   },
                 },
                 timestamp: endTimestamp,
-              },
-            };
+              };
 
-        messages.push(failedTestStepFinished);
+        taskTestStepFinished(failedTestStepFinished);
 
         for (const skippedStep of remainingSteps) {
           const testStepId = assertAndReturn(
@@ -759,27 +645,23 @@ export default function createTests(
             "Expected a step to either be a hook or a pickleStep"
           );
 
-          messages.push({
-            testStepStarted: {
-              testStepId,
-              testCaseStartedId,
-              timestamp: endTimestamp,
-            },
+          taskTestStepStarted({
+            testStepId,
+            testCaseStartedId,
+            timestamp: endTimestamp,
           });
 
-          messages.push({
-            testStepFinished: {
-              testStepId,
-              testCaseStartedId,
-              testStepResult: {
-                status: TestStepResultStatus.SKIPPED,
-                duration: {
-                  seconds: 0,
-                  nanos: 0,
-                },
+          taskTestStepFinished({
+            testStepId,
+            testCaseStartedId,
+            testStepResult: {
+              status: messages.TestStepResultStatus.SKIPPED,
+              duration: {
+                seconds: 0,
+                nanos: 0,
               },
-              timestamp: endTimestamp,
             },
+            timestamp: endTimestamp,
           });
         }
       } else {
@@ -789,27 +671,23 @@ export default function createTests(
             "Expected a step to either be a hook or a pickleStep"
           );
 
-          messages.push({
-            testStepStarted: {
-              testStepId,
-              testCaseStartedId,
-              timestamp: endTimestamp,
-            },
+          taskTestStepStarted({
+            testStepId,
+            testCaseStartedId,
+            timestamp: endTimestamp,
           });
 
-          messages.push({
-            testStepFinished: {
-              testStepId,
-              testCaseStartedId,
-              testStepResult: {
-                status: TestStepResultStatus.UNKNOWN,
-                duration: {
-                  seconds: 0,
-                  nanos: 0,
-                },
+          taskTestStepFinished({
+            testStepId,
+            testCaseStartedId,
+            testStepResult: {
+              status: messages.TestStepResultStatus.UNKNOWN,
+              duration: {
+                seconds: 0,
+                nanos: 0,
               },
-              timestamp: endTimestamp,
             },
+            timestamp: endTimestamp,
           });
         }
       }
@@ -828,26 +706,151 @@ export default function createTests(
     const willBeRetried =
       this.currentTest?.state === "failed" ? currentRetry < retries : false;
 
-    messages.push({
-      testCaseFinished: {
-        testCaseStartedId,
-        timestamp: endTimestamp,
-        willBeRetried,
+    taskTestCaseFinished({
+      testCaseStartedId,
+      timestamp: endTimestamp,
+      willBeRetried,
+    });
+  }
+
+  /**
+   * Repopulate internal properties in case previous test is retried.
+   */
+  updateInternalSpecProperties({
+    testCaseStartedId: uuid(),
+    remainingSteps: [...properties.allSteps],
+  });
+}
+
+export default function createTests(
+  registry: Registry,
+  source: string,
+  gherkinDocument: messages.GherkinDocument,
+  pickles: messages.Pickle[],
+  messagesEnabled: boolean,
+  omitFiltered: boolean,
+  stepDefinitionHints: {
+    stepDefinitions: string | string[];
+    stepDefinitionPatterns: string[];
+    stepDefinitionPaths: string[];
+  }
+) {
+  const stepDefinitions: messages.StepDefinition[] =
+    registry.stepDefinitions.map((stepDefinition) => {
+      const type: messages.StepDefinitionPatternType =
+        stepDefinition.expression instanceof RegularExpression
+          ? messages.StepDefinitionPatternType.REGULAR_EXPRESSION
+          : messages.StepDefinitionPatternType.CUCUMBER_EXPRESSION;
+
+      return {
+        id: stepDefinition.id,
+        pattern: {
+          type,
+          source: stepDefinition.expression.source,
+        },
+        sourceReference,
+      };
+    });
+
+  const testCases: messages.TestCase[] = pickles.map((pickle) => {
+    const tags = collectTagNames(pickle.tags);
+    const beforeHooks = registry.resolveBeforeHooks(tags);
+    const afterHooks = registry.resolveAfterHooks(tags);
+
+    const hooksToStep = (hook: IHook): messages.TestStep => {
+      return {
+        id: hook.id,
+        hookId: hook.id,
+      };
+    };
+
+    const pickleStepToTestStep = (
+      pickleStep: messages.PickleStep
+    ): messages.TestStep => {
+      const stepDefinitionIds = registry
+        .getMatchingStepDefinitions(pickleStep.text)
+        .map((stepDefinition) => stepDefinition.id);
+
+      return {
+        id: pickleStep.id,
+        pickleStepId: pickleStep.id,
+        stepDefinitionIds,
+      };
+    };
+
+    return {
+      id: pickle.id,
+      pickleId: pickle.id,
+      testSteps: [
+        ...beforeHooks.map(hooksToStep),
+        ...pickle.steps.map(pickleStepToTestStep),
+        ...afterHooks.map(hooksToStep),
+      ],
+    };
+  });
+
+  const specEnvelopes: messages.Envelope[] = [];
+
+  specEnvelopes.push({
+    source: {
+      data: source,
+      uri: assertAndReturn(
+        gherkinDocument.uri,
+        "Expected gherkin document to have URI"
+      ),
+      mediaType:
+        "text/x.cucumber.gherkin+plain" as messages.SourceMediaType.TEXT_X_CUCUMBER_GHERKIN_PLAIN,
+    },
+  });
+
+  specEnvelopes.push({
+    gherkinDocument,
+  });
+
+  for (const pickle of pickles) {
+    specEnvelopes.push({
+      pickle,
+    });
+  }
+
+  for (const hook of [...registry.beforeHooks, ...registry.afterHooks]) {
+    specEnvelopes.push({
+      hook: {
+        id: hook.id,
+        sourceReference,
       },
     });
+  }
 
-    /**
-     * Repopulate internal properties in case previous test is retried.
-     */
-    updateInternalSpecProperties({
-      testCaseStartedId: uuid(),
-      remainingSteps: [...properties.allSteps],
+  for (const stepDefinition of stepDefinitions) {
+    specEnvelopes.push({
+      stepDefinition,
     });
-  });
+  }
 
-  after(function () {
-    flushMessages(context.messages);
-  });
+  for (const testCase of testCases) {
+    specEnvelopes.push({
+      testCase,
+    });
+  }
+
+  const testFilter = createTestFilter(gherkinDocument, Cypress.env());
+
+  const context: CompositionContext = {
+    registry,
+    gherkinDocument,
+    astIdsMap: createAstIdMap(gherkinDocument),
+    pickles,
+    specEnvelopes,
+    testFilter,
+    omitFiltered,
+    messagesEnabled,
+    stepDefinitionHints,
+  };
+
+  if (gherkinDocument.feature) {
+    createFeature(context, gherkinDocument.feature);
+  }
 }
 
 type Tail<T extends any[]> = T extends [infer _A, ...infer R] ? R : never;

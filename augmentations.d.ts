@@ -17,8 +17,6 @@ declare module "@cucumber/cucumber" {
 
 declare global {
   namespace globalThis {
-    var __cypress_cucumber_preprocessor_dont_use_this: true | undefined;
-
     var __cypress_cucumber_preprocessor_registry_dont_use_this:
       | Registry
       | undefined;

@@ -30,9 +30,6 @@
             "result": {
               "status": "unknown",
               "duration": 0
-            },
-            "match": {
-              "location": "not available:0"
             }
           }
         ],

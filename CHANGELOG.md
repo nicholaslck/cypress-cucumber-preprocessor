@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
 
 - Visualize hook filters properly, fixes [#922](https://github.com/badeball/cypress-cucumber-preprocessor/issues/922).
 
+- Drop support for Cypress v9.
+
+This version contains some significant changes to the implementation, specifically regarding Cucumber messages. The backend is now more stateful to handle corner cases. However, the backend is also less forgivable than before. Thus, I (the author) expect some issues to arise out of this. If you have found an issue with this version, please open up a ticket.
+
 ## v16.0.3
 
 - Update dependency on `@badeball/cypress-configuration`, fixing an issue where specs in node_modules weren't ignored.

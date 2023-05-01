@@ -14,22 +14,26 @@ import {
 import { INTERNAL_PROPERTY_NAME, INTERNAL_SUITE_PROPERTIES } from "./constants";
 
 import {
-  TASK_APPEND_MESSAGES,
+  TASK_SPEC_ENVELOPES,
   TASK_CREATE_STRING_ATTACHMENT,
   TASK_TEST_CASE_STARTED,
   TASK_TEST_STEP_STARTED,
+  TASK_TEST_STEP_FINISHED,
+  TASK_TEST_CASE_FINISHED,
 } from "./cypress-task-definitions";
 
 import {
   afterRunHandler,
   afterScreenshotHandler,
   afterSpecHandler,
-  appendMessagesHandler,
+  specEnvelopesHandler,
   beforeRunHandler,
   beforeSpecHandler,
   createStringAttachmentHandler,
   testCaseStartedHandler,
   testStepStartedHandler,
+  testStepFinishedHandler,
+  testCaseFinishedHandler,
 } from "./plugin-event-handlers";
 
 import { resolve as origResolve } from "./preprocessor-configuration";
@@ -107,10 +111,15 @@ export default async function addCucumberPreprocessorPlugin(
   }
 
   on("task", {
-    [TASK_APPEND_MESSAGES]: appendMessagesHandler,
-    [TASK_TEST_CASE_STARTED]: testCaseStartedHandler,
-    [TASK_TEST_STEP_STARTED]: testStepStartedHandler,
-    [TASK_CREATE_STRING_ATTACHMENT]: createStringAttachmentHandler,
+    [TASK_SPEC_ENVELOPES]: specEnvelopesHandler.bind(null, config),
+    [TASK_TEST_CASE_STARTED]: testCaseStartedHandler.bind(null, config),
+    [TASK_TEST_STEP_STARTED]: testStepStartedHandler.bind(null, config),
+    [TASK_TEST_STEP_FINISHED]: testStepFinishedHandler.bind(null, config),
+    [TASK_TEST_CASE_FINISHED]: testCaseFinishedHandler.bind(null, config),
+    [TASK_CREATE_STRING_ATTACHMENT]: createStringAttachmentHandler.bind(
+      null,
+      config
+    ),
   });
 
   const tags = getTags(config.env);

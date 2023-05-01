@@ -28,6 +28,7 @@ import {
 } from "./helpers/source-map";
 
 export interface IStepDefinition<T extends unknown[], C extends Mocha.Context> {
+  id: string;
   expression: Expression;
   implementation: IStepDefinitionBody<T, C>;
   position?: Position;
@@ -96,6 +97,7 @@ export class Registry {
       .preliminaryStepDefinitions) {
       if (typeof description === "string") {
         this.stepDefinitions.push({
+          id: uuid(),
           expression: new CucumberExpression(
             description,
             this.parameterTypeRegistry
@@ -105,6 +107,7 @@ export class Registry {
         });
       } else {
         this.stepDefinitions.push({
+          id: uuid(),
           expression: new RegularExpression(
             description,
             this.parameterTypeRegistry

@@ -17,9 +17,6 @@
             "result": {
               "status": "undefined",
               "duration": 0
-            },
-            "match": {
-              "location": "not available:0"
             }
           },
           {
@@ -30,9 +27,6 @@
             "result": {
               "status": "skipped",
               "duration": 0
-            },
-            "match": {
-              "location": "not available:0"
             }
           }
         ],

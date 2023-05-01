@@ -19,10 +19,12 @@ import messages from "@cucumber/messages";
 import { HOOK_FAILURE_EXPR } from "./constants";
 
 import {
-  ITaskAppendMessages,
+  ITaskSpecEnvelopes,
   ITaskCreateStringAttachment,
   ITaskTestCaseStarted,
   ITaskTestStepStarted,
+  ITaskTestStepFinished,
+  ITaskTestCaseFinished,
 } from "./cypress-task-definitions";
 
 import { resolve as origResolve } from "./preprocessor-configuration";
@@ -35,13 +37,74 @@ import { notNull } from "./helpers/type-guards";
 
 import { memoize } from "./helpers/memoize";
 
+import debug from "./helpers/debug";
+
+import { createError } from "./helpers/error";
+
 const resolve = memoize(origResolve);
 
-let currentTestCaseStartedId: string;
-let currentTestStepStartedId: string;
-let currentSpecMessages: messages.Envelope[];
+interface StateInitial {
+  state: "initial";
+}
+
+interface StateBeforeSpec {
+  state: "before-spec";
+}
+
+interface StateReceivedSpecEnvelopes {
+  state: "received-envelopes";
+  messages: messages.Envelope[];
+}
+
+interface StateTestStarted {
+  state: "test-started";
+  messages: messages.Envelope[];
+  testCaseStartedId: string;
+}
+
+interface StateStepStarted {
+  state: "step-started";
+  messages: messages.Envelope[];
+  testCaseStartedId: string;
+  testStepStartedId: string;
+}
+
+interface StateStepFinished {
+  state: "step-finished";
+  messages: messages.Envelope[];
+  testCaseStartedId: string;
+}
+
+interface StateTestFinished {
+  state: "test-finished";
+  messages: messages.Envelope[];
+}
+
+interface StateAfterSpec {
+  state: "after-spec";
+}
+
+type State =
+  | StateInitial
+  | StateBeforeSpec
+  | StateReceivedSpecEnvelopes
+  | StateTestStarted
+  | StateStepStarted
+  | StateStepFinished
+  | StateTestFinished
+  | StateAfterSpec;
+
+let state: State = {
+  state: "initial",
+};
 
 export async function beforeRunHandler(config: Cypress.PluginConfigOptions) {
+  debug("beforeRunHandler()");
+
+  if (!config.isTextTerminal) {
+    return;
+  }
+
   const preprocessor = await resolve(config, config.env, "/");
 
   if (!preprocessor.messages.enabled) {
@@ -67,6 +130,12 @@ export async function beforeRunHandler(config: Cypress.PluginConfigOptions) {
 }
 
 export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
+  debug("afterRunHandler()");
+
+  if (!config.isTextTerminal) {
+    return;
+  }
+
   const preprocessor = await resolve(config, config.env, "/");
 
   if (
@@ -122,7 +191,7 @@ export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
 
     const log = (output: string | Uint8Array) => {
       if (typeof output !== "string") {
-        throw new Error(
+        throw createError(
           "Expected a JSON output of string, but got " + typeof output
         );
       } else {
@@ -167,7 +236,7 @@ export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
     }
 
     if (typeof jsonOutput !== "string") {
-      throw new Error(
+      throw createError(
         "Expected JSON formatter to have finished, but it never returned"
       );
     }
@@ -212,8 +281,31 @@ export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
   }
 }
 
-export async function beforeSpecHandler(_config: Cypress.PluginConfigOptions) {
-  currentSpecMessages = [];
+export async function beforeSpecHandler(config: Cypress.PluginConfigOptions) {
+  debug("beforeSpecHandler()");
+
+  if (!config.isTextTerminal) {
+    return;
+  }
+
+  const preprocessor = await resolve(config, config.env, "/");
+
+  if (!preprocessor.messages.enabled) {
+    return;
+  }
+
+  switch (state.state) {
+    case "initial":
+    case "after-spec":
+      state = {
+        state: "before-spec",
+      };
+      break;
+    default:
+      throw createError(
+        "Unexpected state in beforeSpecHandler: " + state.state
+      );
+  }
 }
 
 export async function afterSpecHandler(
@@ -221,6 +313,12 @@ export async function afterSpecHandler(
   spec: Cypress.Spec,
   results: CypressCommandLine.RunResult
 ) {
+  debug("afterSpecHandler()");
+
+  if (!config.isTextTerminal) {
+    return;
+  }
+
   const preprocessor = await resolve(config, config.env, "/");
 
   const messagesPath = ensureIsAbsolute(
@@ -229,40 +327,55 @@ export async function afterSpecHandler(
   );
 
   // `results` is undefined when running via `cypress open`.
-  if (!preprocessor.messages.enabled || !currentSpecMessages || !results) {
-    return;
+  if (preprocessor.messages.enabled && results) {
+    const wasRemainingSkipped = results.tests.some((test) =>
+      test.displayError?.match(HOOK_FAILURE_EXPR)
+    );
+
+    if (wasRemainingSkipped) {
+      console.log(
+        chalk.yellow(
+          `  Hook failures can't be represented in messages / JSON reports, thus none is created for ${spec.relative}.`
+        )
+      );
+    } else if ("messages" in state) {
+      await fs.writeFile(
+        messagesPath,
+        state.messages.map((message) => JSON.stringify(message)).join("\n") +
+          "\n",
+        {
+          flag: "a",
+        }
+      );
+    }
   }
 
-  const wasRemainingSkipped = results.tests.some((test) =>
-    test.displayError?.match(HOOK_FAILURE_EXPR)
-  );
-
-  if (wasRemainingSkipped) {
-    console.log(
-      chalk.yellow(
-        `  Hook failures can't be represented in messages / JSON reports, thus none is created for ${spec.relative}.`
-      )
-    );
-  } else {
-    await fs.writeFile(
-      messagesPath,
-      currentSpecMessages.map((message) => JSON.stringify(message)).join("\n") +
-        "\n",
-      {
-        flag: "a",
-      }
-    );
-  }
+  state = {
+    state: "after-spec",
+  };
 }
 
 export async function afterScreenshotHandler(
   config: Cypress.PluginConfigOptions,
   details: Cypress.ScreenshotDetails
 ) {
+  debug("afterScreenshotHandler()");
+
+  if (!config.isTextTerminal) {
+    return details;
+  }
+
   const preprocessor = await resolve(config, config.env, "/");
 
-  if (!preprocessor.messages.enabled || !currentSpecMessages) {
+  if (!preprocessor.messages.enabled) {
     return details;
+  }
+
+  switch (state.state) {
+    case "step-started":
+      break;
+    default:
+      return details;
   }
 
   let buffer;
@@ -275,8 +388,8 @@ export async function afterScreenshotHandler(
 
   const message: messages.Envelope = {
     attachment: {
-      testCaseStartedId: currentTestCaseStartedId,
-      testStepId: currentTestStepStartedId,
+      testCaseStartedId: state.testCaseStartedId,
+      testStepId: state.testStepStartedId,
       body: buffer.toString("base64"),
       mediaType: "image/png",
       contentEncoding:
@@ -284,61 +397,192 @@ export async function afterScreenshotHandler(
     },
   };
 
-  currentSpecMessages.push(message);
+  state.messages.push(message);
 
   return details;
 }
 
-export function appendMessagesHandler(data: ITaskAppendMessages) {
-  if (!currentSpecMessages) {
+export function specEnvelopesHandler(
+  config: Cypress.PluginConfigOptions,
+  data: ITaskSpecEnvelopes
+) {
+  debug("specEnvelopesHandler()");
+
+  if (!config.isTextTerminal) {
     return true;
   }
 
-  currentSpecMessages.push(...data.messages);
+  switch (state.state) {
+    case "before-spec":
+      break;
+    default:
+      throw createError(
+        "Unexpected state in specEnvelopesHandler: " + state.state
+      );
+  }
+
+  state = {
+    state: "received-envelopes",
+    messages: data.messages,
+  };
 
   return true;
 }
 
-export function testCaseStartedHandler(data: ITaskTestCaseStarted) {
-  if (!currentSpecMessages) {
+export function testCaseStartedHandler(
+  config: Cypress.PluginConfigOptions,
+  data: ITaskTestCaseStarted
+) {
+  debug("testCaseStartedHandler()");
+
+  if (!config.isTextTerminal) {
     return true;
   }
 
-  currentTestCaseStartedId = data.testCaseStartedId;
+  switch (state.state) {
+    case "received-envelopes":
+    case "test-finished":
+      break;
+    default:
+      throw createError(
+        "Unexpected state in testCaseStartedHandler: " + state.state
+      );
+  }
+
+  state = {
+    state: "test-started",
+    messages: state.messages.concat({ testCaseStarted: data }),
+    testCaseStartedId: data.id,
+  };
 
   return true;
 }
 
-export function testStepStartedHandler(data: ITaskTestStepStarted) {
-  if (!currentSpecMessages) {
+export function testStepStartedHandler(
+  config: Cypress.PluginConfigOptions,
+  data: ITaskTestStepStarted
+) {
+  debug("testStepStartedHandler()");
+
+  if (!config.isTextTerminal) {
     return true;
   }
 
-  currentTestStepStartedId = data.testStepId;
+  switch (state.state) {
+    case "test-started":
+    case "step-finished":
+      break;
+    // This state can happen in cases where an error is "rescued".
+    case "step-started":
+      break;
+    default:
+      throw createError(
+        "Unexpected state in testStepStartedHandler: " + state.state
+      );
+  }
+
+  state = {
+    state: "step-started",
+    messages: state.messages.concat({ testStepStarted: data }),
+    testCaseStartedId: state.testCaseStartedId,
+    testStepStartedId: data.testStepId,
+  };
 
   return true;
 }
 
-export function createStringAttachmentHandler({
-  data,
-  mediaType,
-  encoding,
-}: ITaskCreateStringAttachment) {
-  if (!currentSpecMessages) {
+export function testStepFinishedHandler(
+  config: Cypress.PluginConfigOptions,
+  data: ITaskTestStepFinished
+) {
+  debug("testStepFinishedHandler()");
+
+  if (!config.isTextTerminal) {
     return true;
+  }
+
+  switch (state.state) {
+    case "step-started":
+      break;
+    default:
+      throw createError(
+        "Unexpected state in testStepFinishedHandler: " + state.state
+      );
+  }
+
+  state = {
+    state: "step-finished",
+    messages: state.messages.concat({ testStepFinished: data }),
+    testCaseStartedId: state.testCaseStartedId,
+  };
+
+  return true;
+}
+
+export function testCaseFinishedHandler(
+  config: Cypress.PluginConfigOptions,
+  data: ITaskTestCaseFinished
+) {
+  debug("testCaseFinishedHandler()");
+
+  if (!config.isTextTerminal) {
+    return true;
+  }
+
+  switch (state.state) {
+    case "test-started":
+    case "step-finished":
+      break;
+    default:
+      throw createError(
+        "Unexpected state in testCaseFinishedHandler: " + state.state
+      );
+  }
+
+  state = {
+    state: "test-finished",
+    messages: state.messages.concat({ testCaseFinished: data }),
+  };
+
+  return true;
+}
+
+export async function createStringAttachmentHandler(
+  config: Cypress.PluginConfigOptions,
+  { data, mediaType, encoding }: ITaskCreateStringAttachment
+) {
+  debug("createStringAttachmentHandler()");
+
+  if (!config.isTextTerminal) {
+    return true;
+  }
+
+  const preprocessor = await resolve(config, config.env, "/");
+
+  if (!preprocessor.messages.enabled) {
+    return true;
+  }
+
+  switch (state.state) {
+    case "step-started":
+      break;
+    default:
+      throw createError(
+        "Unexpected state in createStringAttachmentHandler: " + state.state
+      );
   }
 
   const message: messages.Envelope = {
     attachment: {
-      testCaseStartedId: currentTestCaseStartedId,
-      testStepId: currentTestStepStartedId,
+      testCaseStartedId: state.testCaseStartedId,
+      testStepId: state.testStepStartedId,
       body: data,
       mediaType: mediaType,
       contentEncoding: encoding,
     },
   };
 
-  currentSpecMessages.push(message);
+  state.messages.push(message);
 
   return true;
 }
