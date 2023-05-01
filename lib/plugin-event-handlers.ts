@@ -301,6 +301,11 @@ export async function beforeSpecHandler(config: Cypress.PluginConfigOptions) {
         state: "before-spec",
       };
       break;
+    // This happens in case of visting a new domain, ref. https://github.com/cypress-io/cypress/issues/26300.
+    // In this case, we want to disgard messages obtained in the current test and allow execution to continue
+    // as if nothing happened.
+    case "step-started":
+      break;
     default:
       throw createError(
         "Unexpected state in beforeSpecHandler: " + state.state
@@ -415,6 +420,25 @@ export function specEnvelopesHandler(
   switch (state.state) {
     case "before-spec":
       break;
+    // This happens in case of visting a new domain, ref. https://github.com/cypress-io/cypress/issues/26300.
+    // In this case, we want to disgard messages obtained in the current test and allow execution to continue
+    // as if nothing happened.
+    case "step-started":
+      {
+        const iTestCaseStarted = state.messages.findLastIndex(
+          (message) => !!message.testCaseStarted
+        );
+
+        if (iTestCaseStarted === -1) {
+          throw createError("Expected to find a testCaseStarted envelope");
+        }
+
+        state = {
+          state: "received-envelopes",
+          messages: state.messages.slice(0, iTestCaseStarted),
+        };
+      }
+      return true;
     default:
       throw createError(
         "Unexpected state in specEnvelopesHandler: " + state.state

@@ -160,3 +160,19 @@ Then("the JSON report shouldn't contain any specs", async function () {
     );
   }
 });
+
+Then("the JSON report should contain {int} tests", async function (n: number) {
+  const absolutejsonPath = path.join(this.tmpDir, "cucumber-report.json");
+
+  const jsonFile = await fs.readFile(absolutejsonPath);
+
+  const actualJsonOutput = JSON.parse(jsonFile.toString());
+
+  const elements = actualJsonOutput.flatMap((spec: any) => spec.elements);
+
+  if (elements.length !== n) {
+    throw new Error(
+      `Expected to find ${n} tests, but found ${elements.length}`
+    );
+  }
+});
