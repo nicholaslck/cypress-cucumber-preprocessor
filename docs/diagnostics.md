@@ -1,3 +1,5 @@
+[← Back to documentation](readme.md)
+
 # Diagnostics / dry run
 
 A diagnostics utility is provided to verify that each step matches one, and only one, step definition. This can be run as shown below.

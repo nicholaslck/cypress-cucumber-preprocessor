@@ -13,7 +13,7 @@ import {
 
 import ancestor from "common-ancestor-path";
 
-import { assertAndReturn } from "./assertions";
+import { assertAndReturn } from "./helpers/assertions";
 
 import { resolve } from "./preprocessor-configuration";
 
@@ -22,13 +22,15 @@ import {
   getStepDefinitionPatterns,
 } from "./step-definitions";
 
-import { notNull } from "./type-guards";
+import { notNull } from "./helpers/type-guards";
 
 import { ensureIsRelative } from "./helpers/paths";
 
 import { rebuildOriginalConfigObject } from "./add-cucumber-preprocessor-plugin";
 
-import debug from "./debug";
+import debug from "./helpers/debug";
+
+import type { CreateTestsOptions } from "./browser-runtime";
 
 const { stringify } = JSON;
 
@@ -127,12 +129,27 @@ export async function compile(
   const prepareLibPath = (...parts: string[]) =>
     stringify(path.join(__dirname, ...parts));
 
-  const createTestsPath = prepareLibPath("create-tests");
+  const createTestsPath = prepareLibPath("browser-runtime");
 
   const registryPath = prepareLibPath("registry");
 
   const ensureRelativeToProjectRoot = (path: string) =>
     ensureIsRelative(configuration.projectRoot, path);
+
+  const createTestsOptions: CreateTestsOptions = [
+    data,
+    gherkinDocument,
+    pickles,
+    preprocessor.messages.enabled,
+    preprocessor.omitFiltered,
+    {
+      stepDefinitions,
+      stepDefinitionPatterns: stepDefinitionPatterns.map(
+        ensureRelativeToProjectRoot
+      ),
+      stepDefinitionPaths: stepDefinitionPaths.map(ensureRelativeToProjectRoot),
+    },
+  ];
 
   return `
     const { default: createTests } = require(${createTestsPath});
@@ -149,22 +166,6 @@ export async function compile(
 
     registry.finalize();
 
-    createTests(
-      registry,
-      ${stringify(data)},
-      ${stringify(gherkinDocument)},
-      ${stringify(pickles)},
-      ${preprocessor.messages.enabled},
-      ${preprocessor.omitFiltered},
-      ${stringify({
-        stepDefinitions,
-        stepDefinitionPatterns: stepDefinitionPatterns.map(
-          ensureRelativeToProjectRoot
-        ),
-        stepDefinitionPaths: stepDefinitionPaths.map(
-          ensureRelativeToProjectRoot
-        ),
-      })}
-    );
+    createTests(registry, ...${stringify(createTestsOptions)});
   `;
 }

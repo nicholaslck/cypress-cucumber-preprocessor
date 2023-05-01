@@ -1,11 +1,8 @@
-import { Given, Then } from "@cucumber/cucumber";
+import { Then } from "@cucumber/cucumber";
 import path from "path";
 import { promises as fs } from "fs";
 import assert from "assert";
-import child_process from "child_process";
-import { toByteArray } from "base64-js";
 import { PNG } from "pngjs";
-import { version as cypressVersion } from "cypress/package.json";
 
 function isObject(object: any): object is object {
   return typeof object === "object" && object != null;
@@ -44,29 +41,6 @@ function prepareJsonReport(tree: any) {
 
   return tree;
 }
-
-Given("I've ensured cucumber-json-formatter is installed", async () => {
-  const child = child_process.spawn("which", ["cucumber-json-formatter"], {
-    stdio: "ignore",
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    child.on("exit", (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error("cucumber-json-formatter must be installed"));
-      }
-    });
-  });
-});
-
-Then("there should be a messages report", async function () {
-  await assert.doesNotReject(
-    () => fs.access(path.join(this.tmpDir, "cucumber-messages.ndjson")),
-    "Expected there to be a messages file"
-  );
-});
 
 Then("there should be no JSON output", async function () {
   await assert.rejects(
@@ -136,7 +110,7 @@ Then(
 
     const png = await new Promise<PNG>((resolve, reject) => {
       new PNG().parse(
-        Buffer.from(toByteArray(embedding.data)),
+        Buffer.from(embedding.data, "base64"),
         function (error, data) {
           if (error) {
             reject(error);
@@ -147,22 +121,10 @@ Then(
       );
     });
 
-    let expectedDimensions: { width: number; height: number };
-
-    /**
-     * See https://github.com/cypress-io/cypress/pull/15686 and https://github.com/cypress-io/cypress/pull/17309.
-     */
-    if (cypressVersion.startsWith("7.")) {
-      expectedDimensions = {
-        width: 1920,
-        height: 1080,
-      };
-    } else {
-      expectedDimensions = {
-        width: 1280,
-        height: 720,
-      };
-    }
+    const expectedDimensions = {
+      width: 1280,
+      height: 720,
+    };
 
     const { width: actualWidth, height: actualHeight } = png;
 
@@ -170,6 +132,20 @@ Then(
     assert.strictEqual(actualHeight, expectedDimensions.height);
   }
 );
+
+Then("the JSON report should contain a spec", async function () {
+  const absolutejsonPath = path.join(this.tmpDir, "cucumber-report.json");
+
+  const jsonFile = await fs.readFile(absolutejsonPath);
+
+  const actualJsonOutput = JSON.parse(jsonFile.toString());
+
+  if (actualJsonOutput.length !== 1) {
+    throw new Error(
+      `Expected to find a single spec, but found ${actualJsonOutput.length}`
+    );
+  }
+});
 
 Then("the JSON report shouldn't contain any specs", async function () {
   const absolutejsonPath = path.join(this.tmpDir, "cucumber-report.json");
@@ -181,6 +157,22 @@ Then("the JSON report shouldn't contain any specs", async function () {
   if (actualJsonOutput.length > 0) {
     throw new Error(
       `Expected to find zero specs, but found ${actualJsonOutput.length}`
+    );
+  }
+});
+
+Then("the JSON report should contain {int} tests", async function (n: number) {
+  const absolutejsonPath = path.join(this.tmpDir, "cucumber-report.json");
+
+  const jsonFile = await fs.readFile(absolutejsonPath);
+
+  const actualJsonOutput = JSON.parse(jsonFile.toString());
+
+  const elements = actualJsonOutput.flatMap((spec: any) => spec.elements);
+
+  if (elements.length !== n) {
+    throw new Error(
+      `Expected to find ${n} tests, but found ${elements.length}`
     );
   }
 });

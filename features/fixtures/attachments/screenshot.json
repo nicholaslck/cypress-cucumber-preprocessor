@@ -10,6 +10,7 @@
         "name": "a scenario",
         "steps": [
           {
+            "arguments": [],
             "keyword": "Given ",
             "line": 3,
             "name": "a step",
@@ -28,6 +29,7 @@
             ]
           }
         ],
+        "tags": [],
         "type": "scenario"
       }
     ],
@@ -35,6 +37,7 @@
     "keyword": "Feature",
     "line": 1,
     "name": "a feature",
+    "tags": [],
     "uri": "cypress/e2e/a.feature"
   }
 ]

@@ -1,3 +1,5 @@
+[← Back to documentation](readme.md)
+
 # Configuration
 
 The preprocessor uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig), which means you can place configuration options in EG. `.cypress-cucumber-preprocessorrc.json` or `package.json`, with corresponding examples shown below.
@@ -59,8 +61,6 @@ Every configuration option has a similar key which can be use to override it, sh
 | `messages.enabled` | `messagesEnabled` | `true`, `false`                          |
 | `messages.output`  | `messagesOutput`  | `cucumber-messages.ndjson`               |
 | `json.enabled`     | `jsonEnabled`     | `true`, `false`                          |
-| `json.formatter`   | `jsonFormatter`   | `/usr/bin/cucumber-json-formatter`       |
-| `json.args     `   | `jsonArgs     `   | `["custom-json-formatter.js"]`           |
 | `json.output`      | `jsonOutput`      | `cucumber-report.json`                   |
 | `html.enabled`     | `htmlEnabled`     | `true`, `false`                          |
 | `html.output`      | `htmlOutput`      | `cucumber-report.html`                   |

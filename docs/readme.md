@@ -14,4 +14,6 @@
 * [Configuration](configuration.md)
 * [Test configuration](test-configuration.md)
 * [Diagnostics / dry run](diagnostics.md)
+* [Mixing Cucumber and non-Cucumber specs](mixing-types.md)
+* [:warning: On event handlers](event-handlers.md)
 * [Frequently asked questions](faq.md)

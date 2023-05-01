@@ -1,11 +1,11 @@
 /* eslint-disable */
 
+import fs from "fs/promises";
 import { parse } from "@babel/parser";
 import type { File } from "@babel/types";
 import type { NodePath } from "ast-types/lib/node-path";
 import { visit } from "recast";
 import type { namedTypes } from "ast-types";
-import * as fs from "fs-extra";
 import prettier from "prettier";
 
 /**

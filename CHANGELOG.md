@@ -2,6 +2,64 @@
 
 All notable changes to this project will be documented in this file.
 
+## v17.0.0
+
+- Detect erroneous use of async / await and fail fast, relates to [#903](https://github.com/badeball/cypress-cucumber-preprocessor/issues/903).
+
+- More precise snippet suggestions, fixes [#974](https://github.com/badeball/cypress-cucumber-preprocessor/issues/974).
+
+- Report resolved configuration correctly, fixes [#951](https://github.com/badeball/cypress-cucumber-preprocessor/issues/951).
+
+- Visualize hook filters properly, fixes [#922](https://github.com/badeball/cypress-cucumber-preprocessor/issues/922).
+
+- Handle re-runs gracefully, fixes [#944](https://github.com/badeball/cypress-cucumber-preprocessor/issues/944).
+
+- Drop support for Cypress v9.
+
+- Node v18 or beyond is now required.
+
+This version contains some significant changes to the implementation, specifically regarding Cucumber messages. The backend is now more stateful to handle corner cases. However, the backend is also less forgivable than before. Thus, I (the author) expect some issues to arise out of this. If you have found an issue with this version, please open up a ticket.
+
+## v16.0.3
+
+- Update dependency on `@badeball/cypress-configuration`, fixing an issue where specs in node_modules weren't ignored.
+
+## v16.0.2
+
+- Correct an issue inhibiting users of `type: module` -projects from using the diagnostics utility ([#971](https://github.com/badeball/cypress-cucumber-preprocessor/pull/971)).
+
+## v16.0.1
+
+- Correctly set `willBeRetried` non-retried tests, fixes [#977](https://github.com/badeball/cypress-cucumber-preprocessor/issues/977).
+
+## v16.0.0
+
+- Correctly set `willBeRetried` in messages reports, fixes [#849](https://github.com/badeball/cypress-cucumber-preprocessor/issues/849).
+
+- Replace [cucumber-json-formatter](https://github.com/cucumber/json-formatter) with native components, relates to [#795](https://github.com/badeball/cypress-cucumber-preprocessor/issues/795), [#827](https://github.com/badeball/cypress-cucumber-preprocessor/issues/827), [#870](https://github.com/badeball/cypress-cucumber-preprocessor/issues/870), [#966](https://github.com/badeball/cypress-cucumber-preprocessor/issues/966) and [#967](https://github.com/badeball/cypress-cucumber-preprocessor/issues/967).
+
+  - This removes the need to install `cucumber-json-formatter` in order to generate JSON reports.
+
+  - This removes the options `json.formatter` and `json.args`, which are no longer relevant. With the native components, no child process is spawned.
+
+  - ~~If you previously had configured `specPattern` to equal `**/*.feature` (or similar), then you should change it to `cypress/e2e/**/*.feature` in order to not accidentally include feature files located in `node_modules`. This will otherwise interfere with the calculation of the *common ancestor path* and thus step definition resolution.~~
+
+    - This is no longer necessary as of v16.0.3.
+
+- Use deterministic, internal IDs, fixes [#948](https://github.com/badeball/cypress-cucumber-preprocessor/issues/948) to some degree..
+
+## v15.1.5
+
+- Correctly escape injected values to glob patterns, fixes [#946](https://github.com/badeball/cypress-cucumber-preprocessor/issues/946).
+
+## v15.1.4
+
+- Handle rescued test errors without self erroring, fixes [#856](https://github.com/badeball/cypress-cucumber-preprocessor/issues/856).
+
+## v15.1.3
+
+- Ensure attachments are correctly added to HTML reports in case of retries, fixes [#931](https://github.com/badeball/cypress-cucumber-preprocessor/issues/931).
+
 ## v15.1.2
 
 - Limit the size of internal variables contained within the Cypress environment, fixes [#908](https://github.com/badeball/cypress-cucumber-preprocessor/issues/908).

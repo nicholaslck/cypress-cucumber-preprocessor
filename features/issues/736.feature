@@ -15,7 +15,6 @@ Feature: create output directories
         }
       }
       """
-    And I've ensured cucumber-json-formatter is installed
 
   Scenario:
     Given a file named "cypress/e2e/a.feature" with:

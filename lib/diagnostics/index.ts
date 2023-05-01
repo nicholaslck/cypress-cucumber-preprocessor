@@ -11,11 +11,10 @@ import {
   getConfiguration as resolveCypressConfiguration,
   getTestFiles,
 } from "@badeball/cypress-configuration";
-import { addAlias } from "module-alias";
 import Table from "cli-table";
 import ancestor from "common-ancestor-path";
 import { resolve as resolvePreprocessorConfiguration } from "../preprocessor-configuration";
-import { Position } from "../source-map";
+import { Position } from "../helpers/source-map";
 import { IStepDefinition } from "../registry";
 import { ensureIsRelative } from "../helpers/paths";
 import { indent } from "../helpers/strings";
@@ -25,8 +24,8 @@ import {
   DiagnosticResult,
   UnmatchedStep,
 } from "./diagnose";
-import { assertAndReturn } from "../assertions";
-import { generateSnippet } from "../snippets";
+import { assertAndReturn } from "../helpers/assertions";
+import { generateSnippet } from "../helpers/snippets";
 
 export function log(...lines: string[]) {
   console.log(lines.join("\n"));
@@ -288,9 +287,16 @@ export function createUnmatchedStep(
       append("");
 
       append(
-        indent(generateSnippet(generatedExpression, unmatch.argument), {
-          count: 2,
-        })
+        indent(
+          generateSnippet(
+            generatedExpression,
+            "Context" as any,
+            unmatch.argument
+          ),
+          {
+            count: 2,
+          }
+        )
       );
     }
   });
@@ -301,11 +307,6 @@ export async function execute(options: {
   env: NodeJS.ProcessEnv;
   cwd: string;
 }): Promise<void> {
-  addAlias(
-    "@badeball/cypress-cucumber-preprocessor",
-    "@badeball/cypress-cucumber-preprocessor/methods"
-  );
-
   const cypress = resolveCypressConfiguration(options);
 
   const implicitIntegrationFolder = assertAndReturn(

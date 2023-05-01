@@ -10,21 +10,25 @@ import parse from "@cucumber/tag-expressions";
 
 import { v4 as uuid } from "uuid";
 
-import { assertAndReturn } from "./assertions";
+import { assertAndReturn } from "./helpers/assertions";
 
 import DataTable from "./data_table";
 
-import { CypressCucumberError } from "./error";
+import { CypressCucumberError } from "./helpers/error";
 
 import {
   IHookBody,
   IParameterTypeDefinition,
   IStepDefinitionBody,
-} from "./types";
+} from "./public-member-types";
 
-import { maybeRetrievePositionFromSourceMap, Position } from "./source-map";
+import {
+  maybeRetrievePositionFromSourceMap,
+  Position,
+} from "./helpers/source-map";
 
 export interface IStepDefinition<T extends unknown[], C extends Mocha.Context> {
+  id: string;
   expression: Expression;
   implementation: IStepDefinitionBody<T, C>;
   position?: Position;
@@ -38,6 +42,7 @@ export type HookKeyword = "Before" | "After";
 
 export interface IHook {
   id: string;
+  tags?: string;
   node: ReturnType<typeof parse>;
   implementation: IHookBody;
   keyword: HookKeyword;
@@ -54,6 +59,7 @@ function parseHookArguments(
 ): IHook {
   return {
     id: uuid(),
+    tags: options.tags,
     node: options.tags ? parse(options.tags) : noopNode,
     implementation: fn,
     keyword,
@@ -91,6 +97,7 @@ export class Registry {
       .preliminaryStepDefinitions) {
       if (typeof description === "string") {
         this.stepDefinitions.push({
+          id: uuid(),
           expression: new CucumberExpression(
             description,
             this.parameterTypeRegistry
@@ -100,6 +107,7 @@ export class Registry {
         });
       } else {
         this.stepDefinitions.push({
+          id: uuid(),
           expression: new RegularExpression(
             description,
             this.parameterTypeRegistry
@@ -225,17 +233,7 @@ export class Registry {
   }
 
   public runHook(world: Mocha.Context, hook: IHook) {
-    hook.implementation.call(world);
-  }
-}
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace globalThis {
-    // eslint-disable-next-line no-var
-    var __cypress_cucumber_preprocessor_registry_dont_use_this:
-      | Registry
-      | undefined;
+    return hook.implementation.call(world);
   }
 }
 
@@ -261,7 +259,7 @@ export function freeRegistry() {
   delete globalThis[globalPropertyName];
 }
 
-export function getRegistry() {
+export function getRegistry(): Registry {
   return assertAndReturn(
     globalThis[globalPropertyName],
     "Expected to find a global registry (this usually means you are trying to define steps or hooks in support/e2e.js, which is not supported)"

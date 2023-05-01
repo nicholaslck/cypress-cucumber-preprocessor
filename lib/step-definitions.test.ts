@@ -11,7 +11,8 @@ import {
 
 import {
   IPreprocessorConfiguration,
-  PreprocessorConfiguration,
+  IUserConfiguration,
+  combineIntoConfiguration,
 } from "./preprocessor-configuration";
 
 import {
@@ -49,7 +50,7 @@ function pre10example(
     const actual = getStepDefinitionPatternsPre10(
       {
         cypress: cypressConfiguration,
-        preprocessor: new PreprocessorConfiguration(
+        preprocessor: combineIntoConfiguration(
           preprocessorConfiguration,
           {},
           cypressConfiguration,
@@ -87,7 +88,7 @@ const DUMMY_POST10_CONFIG: ICypressPost10Configuration = {
 function post10example(
   filepath: string,
   partialCypressConfiguration: Partial<ICypressPost10Configuration>,
-  preprocessorConfiguration: Partial<IPreprocessorConfiguration>,
+  preprocessorConfiguration: IUserConfiguration,
   implicitIntegrationFolder: string,
   expected: string[]
 ) {
@@ -104,7 +105,7 @@ function post10example(
     const actual = getStepDefinitionPatternsPost10(
       {
         cypress: cypressConfiguration,
-        preprocessor: new PreprocessorConfiguration(
+        preprocessor: combineIntoConfiguration(
           preprocessorConfiguration,
           {},
           cypressConfiguration,
@@ -197,7 +198,6 @@ describe("getStepDefinitionPatternsPre10()", () => {
           },
           preprocessor: {
             stepDefinitions: [],
-            implicitIntegrationFolder: "/foo/bar/cypress/integration",
           },
         },
         "/foo/bar/cypress/features/baz.feature"
@@ -215,7 +215,6 @@ describe("getStepDefinitionPatternsPre10()", () => {
           },
           preprocessor: {
             stepDefinitions: [],
-            implicitIntegrationFolder: "/foo/bar/cypress/integration",
           },
         },
         "/foo/bar/cypress/integration/baz.feature"

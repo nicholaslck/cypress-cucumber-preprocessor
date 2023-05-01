@@ -8,30 +8,31 @@
         "keyword": "Scenario",
         "line": 2,
         "name": "a scenario",
-        "before": [
-          {
-            "result": {
-              "status": "failed",
-              "error_message": "some error"
-            },
-            "match": {
-              "location": "not available:0"
-            }
-          }
-        ],
         "steps": [
           {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 0,
+              "error_message": "some error"
+            }
+          },
+          {
+            "arguments": [],
             "keyword": "Given ",
             "line": 3,
             "name": "a step",
             "result": {
-              "status": "skipped"
+              "status": "skipped",
+              "duration": 0
             },
             "match": {
               "location": "not available:0"
             }
           }
         ],
+        "tags": [],
         "type": "scenario"
       }
     ],
@@ -39,6 +40,7 @@
     "keyword": "Feature",
     "line": 1,
     "name": "a feature",
+    "tags": [],
     "uri": "cypress/e2e/a.feature"
   }
 ]

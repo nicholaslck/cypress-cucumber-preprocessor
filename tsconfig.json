@@ -3,25 +3,24 @@
     "files": true
   },
   "compilerOptions": {
+    "outDir": "dist",
     "declaration": true,
     "skipLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "node16",
     "resolveJsonModule": true,
     "target": "ES2017",
     "module": "CommonJS",
     "types": ["node", "cypress"],
-    "lib": ["dom", "ES2021"]
+    "lib": ["dom", "ESNext"]
   },
   "include": [
     "lib/**/*.ts",
-    "test/**/*.ts",
-    "methods.ts",
-    "declarations.d.ts",
-    "browserify.ts",
-    "esbuild.ts",
-    "webpack.ts"
+    "augmentations.d.ts",
+    "declarations.d.ts"
   ],
-  "exclude": ["lib/index.test-d.ts"]
+  "exclude": [
+    "lib/**/*.test.ts"
+  ]
 }

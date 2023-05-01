@@ -1,20 +1,6 @@
-import syncFs, { promises as fs, constants as fsConstants } from "fs";
+import fs from "fs";
 
-import path from "path";
-
-import child_process from "child_process";
-
-import stream from "stream";
-
-import chalk from "chalk";
-
-import resolvePkg from "resolve-pkg";
-
-import { NdjsonToMessageStream } from "@cucumber/message-streams";
-
-import CucumberHtmlStream from "@cucumber/html-formatter";
-
-import messages, { IdGenerator, SourceMediaType } from "@cucumber/messages";
+import { IdGenerator, SourceMediaType } from "@cucumber/messages";
 
 import parse from "@cucumber/tag-expressions";
 
@@ -25,271 +11,40 @@ import {
   ICypressConfiguration,
 } from "@badeball/cypress-configuration";
 
+import { INTERNAL_PROPERTY_NAME, INTERNAL_SUITE_PROPERTIES } from "./constants";
+
 import {
-  HOOK_FAILURE_EXPR,
-  INTERNAL_PROPERTY_NAME,
-  INTERNAL_SUITE_PROPERTIES,
-  TASK_APPEND_MESSAGES,
+  TASK_SPEC_ENVELOPES,
   TASK_CREATE_STRING_ATTACHMENT,
+  TASK_TEST_CASE_STARTED,
   TASK_TEST_STEP_STARTED,
-} from "./constants";
+  TASK_TEST_STEP_FINISHED,
+  TASK_TEST_CASE_FINISHED,
+} from "./cypress-task-definitions";
+
+import {
+  afterRunHandler,
+  afterScreenshotHandler,
+  afterSpecHandler,
+  specEnvelopesHandler,
+  beforeRunHandler,
+  beforeSpecHandler,
+  createStringAttachmentHandler,
+  testCaseStartedHandler,
+  testStepStartedHandler,
+  testStepFinishedHandler,
+  testCaseFinishedHandler,
+} from "./plugin-event-handlers";
 
 import { resolve as origResolve } from "./preprocessor-configuration";
 
-import { notNull } from "./type-guards";
+import { notNull } from "./helpers/type-guards";
 
-import { getTags } from "./environment-helpers";
+import { getTags } from "./helpers/environment";
 
-import { ensureIsAbsolute } from "./helpers/paths";
-
-import { createTimestamp } from "./messages-helpers";
-
-/**
- * Work-around for the fact that some Cypress versions pre v10 were missing this property in their types.
- */
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Cypress {
-    interface PluginConfigOptions {
-      testFiles: string[];
-    }
-  }
-}
-
-function memoize<T extends (...args: any[]) => any>(
-  fn: T
-): (...args: Parameters<T>) => ReturnType<T> {
-  let result: ReturnType<T>;
-
-  return (...args: Parameters<T>) => {
-    if (result) {
-      return result;
-    }
-
-    return (result = fn(...args));
-  };
-}
+import { memoize } from "./helpers/memoize";
 
 const resolve = memoize(origResolve);
-
-let currentTestStepStartedId: string;
-let currentSpecMessages: messages.Envelope[];
-
-export async function beforeRunHandler(config: Cypress.PluginConfigOptions) {
-  const preprocessor = await resolve(config, config.env, "/");
-
-  if (!preprocessor.messages.enabled) {
-    return;
-  }
-
-  const messagesPath = ensureIsAbsolute(
-    config.projectRoot,
-    preprocessor.messages.output
-  );
-
-  await fs.rm(messagesPath, { force: true });
-
-  const testRunStarted: messages.Envelope = {
-    testRunStarted: {
-      timestamp: createTimestamp(),
-    },
-  };
-
-  await fs.mkdir(path.dirname(messagesPath), { recursive: true });
-
-  await fs.writeFile(messagesPath, JSON.stringify(testRunStarted) + "\n");
-}
-
-export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
-  const preprocessor = await resolve(config, config.env, "/");
-
-  if (
-    !preprocessor.messages.enabled &&
-    !preprocessor.json.enabled &&
-    !preprocessor.html.enabled
-  ) {
-    return;
-  }
-
-  const messagesPath = ensureIsAbsolute(
-    config.projectRoot,
-    preprocessor.messages.output
-  );
-
-  try {
-    await fs.access(messagesPath, fsConstants.F_OK);
-  } catch {
-    return;
-  }
-
-  if (preprocessor.messages.enabled) {
-    const testRunFinished: messages.Envelope = {
-      testRunFinished: {
-        /**
-         * We're missing a "success" attribute here, but cucumber-js doesn't output it, so I won't.
-         * Mostly because I don't want to look into the semantics of it right now.
-         */
-        timestamp: createTimestamp(),
-      } as messages.TestRunFinished,
-    };
-
-    await fs.writeFile(messagesPath, JSON.stringify(testRunFinished) + "\n", {
-      flag: "a",
-    });
-  }
-
-  if (preprocessor.json.enabled) {
-    const jsonPath = ensureIsAbsolute(
-      config.projectRoot,
-      preprocessor.json.output
-    );
-
-    await fs.mkdir(path.dirname(jsonPath), { recursive: true });
-
-    const messages = await fs.open(messagesPath, "r");
-
-    try {
-      const json = await fs.open(jsonPath, "w");
-
-      try {
-        const { formatter, args } = preprocessor.json;
-        const child = child_process.spawn(formatter, args, {
-          stdio: [messages.fd, json.fd, "inherit"],
-        });
-
-        await new Promise<void>((resolve, reject) => {
-          child.on("exit", (code) => {
-            if (code === 0) {
-              resolve();
-            } else {
-              reject(
-                new Error(
-                  `${preprocessor.json.formatter} exited non-successfully`
-                )
-              );
-            }
-          });
-
-          child.on("error", reject);
-        });
-      } finally {
-        await json.close();
-      }
-    } finally {
-      await messages.close();
-    }
-  }
-
-  if (preprocessor.html.enabled) {
-    const htmlPath = ensureIsAbsolute(
-      config.projectRoot,
-      preprocessor.html.output
-    );
-
-    await fs.mkdir(path.dirname(htmlPath), { recursive: true });
-
-    const input = syncFs.createReadStream(messagesPath);
-
-    const output = syncFs.createWriteStream(htmlPath);
-
-    await new Promise<void>((resolve, reject) => {
-      stream.pipeline(
-        input,
-        new NdjsonToMessageStream(),
-        new CucumberHtmlStream(
-          resolvePkg("@cucumber/html-formatter", { cwd: __dirname }) +
-            "/dist/main.css",
-          resolvePkg("@cucumber/html-formatter", { cwd: __dirname }) +
-            "/dist/main.js"
-        ),
-        output,
-        (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        }
-      );
-    });
-  }
-}
-
-export async function beforeSpecHandler(_config: Cypress.PluginConfigOptions) {
-  currentSpecMessages = [];
-}
-
-export async function afterSpecHandler(
-  config: Cypress.PluginConfigOptions,
-  spec: Cypress.Spec,
-  results: CypressCommandLine.RunResult
-) {
-  const preprocessor = await resolve(config, config.env, "/");
-
-  const messagesPath = ensureIsAbsolute(
-    config.projectRoot,
-    preprocessor.messages.output
-  );
-
-  // `results` is undefined when running via `cypress open`.
-  if (!preprocessor.messages.enabled || !currentSpecMessages || !results) {
-    return;
-  }
-
-  const wasRemainingSkipped = results.tests.some((test) =>
-    test.displayError?.match(HOOK_FAILURE_EXPR)
-  );
-
-  if (wasRemainingSkipped) {
-    console.log(
-      chalk.yellow(
-        `  Hook failures can't be represented in JSON reports, thus none is created for ${spec.relative}.`
-      )
-    );
-  } else {
-    await fs.writeFile(
-      messagesPath,
-      currentSpecMessages.map((message) => JSON.stringify(message)).join("\n") +
-        "\n",
-      {
-        flag: "a",
-      }
-    );
-  }
-}
-
-export async function afterScreenshotHandler(
-  config: Cypress.PluginConfigOptions,
-  details: Cypress.ScreenshotDetails
-) {
-  const preprocessor = await resolve(config, config.env, "/");
-
-  if (!preprocessor.messages.enabled || !currentSpecMessages) {
-    return details;
-  }
-
-  let buffer;
-
-  try {
-    buffer = await fs.readFile(details.path);
-  } catch {
-    return details;
-  }
-
-  const message: messages.Envelope = {
-    attachment: {
-      testStepId: currentTestStepStartedId,
-      body: buffer.toString("base64"),
-      mediaType: "image/png",
-      contentEncoding:
-        "BASE64" as unknown as messages.AttachmentContentEncoding.BASE64,
-    },
-  };
-
-  currentSpecMessages.push(message);
-
-  return details;
-}
 
 type AddOptions = {
   omitBeforeRunHandler?: boolean;
@@ -356,44 +111,15 @@ export default async function addCucumberPreprocessorPlugin(
   }
 
   on("task", {
-    [TASK_APPEND_MESSAGES]: (messages: messages.Envelope[]) => {
-      if (!currentSpecMessages) {
-        return true;
-      }
-
-      currentSpecMessages.push(...messages);
-
-      return true;
-    },
-
-    [TASK_TEST_STEP_STARTED]: (testStepStartedId) => {
-      if (!currentSpecMessages) {
-        return true;
-      }
-
-      currentTestStepStartedId = testStepStartedId;
-
-      return true;
-    },
-
-    [TASK_CREATE_STRING_ATTACHMENT]: ({ data, mediaType, encoding }) => {
-      if (!currentSpecMessages) {
-        return true;
-      }
-
-      const message: messages.Envelope = {
-        attachment: {
-          testStepId: currentTestStepStartedId,
-          body: data,
-          mediaType: mediaType,
-          contentEncoding: encoding,
-        },
-      };
-
-      currentSpecMessages.push(message);
-
-      return true;
-    },
+    [TASK_SPEC_ENVELOPES]: specEnvelopesHandler.bind(null, config),
+    [TASK_TEST_CASE_STARTED]: testCaseStartedHandler.bind(null, config),
+    [TASK_TEST_STEP_STARTED]: testStepStartedHandler.bind(null, config),
+    [TASK_TEST_STEP_FINISHED]: testStepFinishedHandler.bind(null, config),
+    [TASK_TEST_CASE_FINISHED]: testCaseFinishedHandler.bind(null, config),
+    [TASK_CREATE_STRING_ATTACHMENT]: createStringAttachmentHandler.bind(
+      null,
+      config
+    ),
   });
 
   const tags = getTags(config.env);
@@ -404,7 +130,7 @@ export default async function addCucumberPreprocessorPlugin(
     const testFiles = getTestFiles(
       config as unknown as ICypressConfiguration
     ).filter((testFile) => {
-      const content = syncFs.readFileSync(testFile).toString("utf-8");
+      const content = fs.readFileSync(testFile).toString("utf-8");
 
       const options = {
         includeSource: false,

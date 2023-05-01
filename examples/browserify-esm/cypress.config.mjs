@@ -1,6 +1,6 @@
 import { defineConfig } from "cypress";
 import preprocessor from "@badeball/cypress-cucumber-preprocessor";
-import browserify from "@badeball/cypress-cucumber-preprocessor/browserify.js";
+import browserify from "@badeball/cypress-cucumber-preprocessor/browserify";
 
 export async function setupNodeEvents(on, config) {
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,

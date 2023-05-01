@@ -1,3 +1,5 @@
+[← Back to documentation](readme.md)
+
 # Step definitions
 
 Step definitions are resolved using search paths that are configurable through the `stepDefinitions` property. The preprocessor uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig), which means you can place configuration options in EG. `.cypress-cucumber-preprocessorrc.json` or `package.json`. The default search paths are shown below.
@@ -38,10 +40,10 @@ Let's consider the following directory structure.
 /home/john.doe/my-project
 └── cypress
     └── e2e
-        ├── bar
+        ├── foo
         │   ├── a.feature
         │   └── a.js
-        └── foo
+        └── bar
             ├── b.feature
             └── b.js
 ```

@@ -19,11 +19,15 @@ jobs:
     needs: prepare-versions
     runs-on: ubuntu-20.04
     container:
-      image: cypress/base:17.3.0
+      image: cypress/base:18.16.0
     strategy:
       matrix:
         cypress-version: ${{fromJson(needs.prepare-versions.outputs.matrix)}}
     steps:
+      - name: Update certificates
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates
       - name: Checkout
         uses: actions/checkout@v3
       - name: Cache NPM modules
@@ -41,13 +45,10 @@ jobs:
       - name: Dependencies
         env:
           CYPRESS_INSTALL_BINARY: "0"
-          CUCUMBER_JSON_FORMATTER_URL: https://github.com/cucumber/common/releases/download/json-formatter%2Fgo%2Fv19.0.0/cucumber-json-formatter-linux-amd64
         run: |
           npm install --force && \
           npm install --no-save cypress@${{ matrix.cypress-version }} && \
-          env -u CYPRESS_INSTALL_BINARY npx cypress install && \
-          curl -L $CUCUMBER_JSON_FORMATTER_URL > /usr/bin/cucumber-json-formatter && \
-          chmod +x /usr/bin/cucumber-json-formatter
+          env -u CYPRESS_INSTALL_BINARY npx cypress install
       - name: Build
         run: npm run build
       - name: Test
@@ -75,13 +76,7 @@ jobs:
           key: cypress-windows
       - name: Dependencies
         shell: bash
-        env:
-          CUCUMBER_JSON_FORMATTER_URL: https://github.com/cucumber/common/releases/download/json-formatter%2Fgo%2Fv19.0.0/cucumber-json-formatter-windows-amd64
-        run: |
-          npm install
-          curl -L $CUCUMBER_JSON_FORMATTER_URL > cucumber-json-formatter.exe
-          chmod +x ./cucumber-json-formatter.exe
-          echo $GITHUB_WORKSPACE >> $GITHUB_PATH
+        run: npm install
       - name: Build
         run: npm run build
       # https://github.com/webpack/webpack/issues/12759

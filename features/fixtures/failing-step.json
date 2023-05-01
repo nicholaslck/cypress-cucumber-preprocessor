@@ -10,11 +10,13 @@
         "name": "a scenario",
         "steps": [
           {
+            "arguments": [],
             "keyword": "Given ",
             "line": 3,
             "name": "a failing step",
             "result": {
               "status": "failed",
+              "duration": 0,
               "error_message": "some error"
             },
             "match": {
@@ -22,17 +24,20 @@
             }
           },
           {
+            "arguments": [],
             "keyword": "And ",
             "line": 4,
             "name": "another step",
             "result": {
-              "status": "skipped"
+              "status": "skipped",
+              "duration": 0
             },
             "match": {
               "location": "not available:0"
             }
           }
         ],
+        "tags": [],
         "type": "scenario"
       }
     ],
@@ -40,6 +45,7 @@
     "keyword": "Feature",
     "line": 1,
     "name": "a feature",
+    "tags": [],
     "uri": "cypress/e2e/a.feature"
   }
 ]

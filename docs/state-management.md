@@ -1,3 +1,5 @@
+[← Back to documentation](readme.md)
+
 # State management
 
 A step definition can transfer state to a subsequent step definition by storing state in instance variables, as shown below.

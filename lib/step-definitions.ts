@@ -1,6 +1,6 @@
 import path from "path";
 
-import glob from "glob";
+import * as glob from "glob";
 
 import util from "util";
 
@@ -14,7 +14,7 @@ import {
   ICypressPre10Configuration,
 } from "@badeball/cypress-configuration";
 
-import debug from "./debug";
+import debug from "./helpers/debug";
 
 import { IPreprocessorConfiguration } from "./preprocessor-configuration";
 
@@ -26,7 +26,7 @@ export async function getStepDefinitionPaths(
   return (
     await Promise.all(
       stepDefinitionPatterns.map((pattern) =>
-        util.promisify(glob)(pattern, { nodir: true })
+        glob.glob(pattern, { nodir: true, windowsPathsNoEscape: true })
       )
     )
   ).reduce((acum, el) => acum.concat(el), []);
@@ -72,7 +72,10 @@ export function getStepDefinitionPatterns(
 export function getStepDefinitionPatternsPost10(
   configuration: {
     cypress: Pick<ICypressPost10Configuration, "projectRoot">;
-    preprocessor: IPreprocessorConfiguration;
+    preprocessor: Pick<
+      IPreprocessorConfiguration,
+      "stepDefinitions" | "implicitIntegrationFolder"
+    >;
   },
   filepath: string
 ): string[] {
@@ -82,11 +85,14 @@ export function getStepDefinitionPatternsPost10(
     throw new Error(`${filepath} is not inside ${projectRoot}`);
   }
 
-  const filepathReplacement = trimFeatureExtension(
-    path.relative(
-      configuration.preprocessor.implicitIntegrationFolder,
-      filepath
-    )
+  const filepathReplacement = glob.escape(
+    trimFeatureExtension(
+      path.relative(
+        configuration.preprocessor.implicitIntegrationFolder,
+        filepath
+      )
+    ),
+    { windowsPathsNoEscape: true }
   );
 
   debug(`replacing [filepath] with ${util.inspect(filepathReplacement)}`);
@@ -125,7 +131,7 @@ export function getStepDefinitionPatternsPre10(
       ICypressPre10Configuration,
       "projectRoot" | "integrationFolder"
     >;
-    preprocessor: IPreprocessorConfiguration;
+    preprocessor: Pick<IPreprocessorConfiguration, "stepDefinitions">;
   },
   filepath: string
 ): string[] {
@@ -138,8 +144,9 @@ export function getStepDefinitionPatternsPre10(
     throw new Error(`${filepath} is not inside ${fullIntegrationFolder}`);
   }
 
-  const filepathReplacement = trimFeatureExtension(
-    path.relative(fullIntegrationFolder, filepath)
+  const filepathReplacement = glob.escape(
+    trimFeatureExtension(path.relative(fullIntegrationFolder, filepath)),
+    { windowsPathsNoEscape: true }
   );
 
   debug(`replacing [filepath] with ${util.inspect(filepathReplacement)}`);

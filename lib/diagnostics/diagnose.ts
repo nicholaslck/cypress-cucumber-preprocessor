@@ -11,20 +11,24 @@ import {
   RegularExpression,
 } from "@cucumber/cucumber-expressions";
 import { generateMessages } from "@cucumber/gherkin";
-import { IdGenerator, SourceMediaType } from "@cucumber/messages";
+import {
+  IdGenerator,
+  SourceMediaType,
+  PickleStepType,
+} from "@cucumber/messages";
 import * as esbuild from "esbuild";
 import sourceMap from "source-map";
-import { assert, assertAndReturn } from "../assertions";
-import { createAstIdMap } from "../ast-helpers";
+import { assert, assertAndReturn } from "../helpers/assertions";
+import { createAstIdMap } from "../helpers/ast";
 import { ensureIsRelative } from "../helpers/paths";
 import { IPreprocessorConfiguration } from "../preprocessor-configuration";
 import { IStepDefinition, Registry, withRegistry } from "../registry";
-import { Position } from "../source-map";
+import { Position } from "../helpers/source-map";
 import {
   getStepDefinitionPatterns,
   getStepDefinitionPaths,
 } from "../step-definitions";
-import { notNull } from "../type-guards";
+import { notNull } from "../helpers/type-guards";
 
 export interface DiagnosticStep {
   source: string;
@@ -34,6 +38,7 @@ export interface DiagnosticStep {
 
 export interface UnmatchedStep {
   step: DiagnosticStep;
+  type: PickleStepType;
   argument: "docString" | "dataTable" | null;
   parameterTypeRegistry: ParameterTypeRegistry;
   stepDefinitionHints: {
@@ -122,7 +127,7 @@ export async function diagnose(configuration: {
 
     const outputFileName = path.join(
       configuration.cypress.projectRoot,
-      ".output-" + randomPart + ".js"
+      ".output-" + randomPart + ".cjs"
     );
 
     let registry: Registry;
@@ -150,7 +155,7 @@ export async function diagnose(configuration: {
         }
 
         throw new Error(
-          `Failed to compile steø definitions of ${testFile}, with errors shown above...`
+          `Failed to compile step definitions of ${testFile}, with errors shown above...`
         );
       }
 
@@ -289,6 +294,10 @@ export async function diagnose(configuration: {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 text: step.text!,
               },
+              type: assertAndReturn(
+                step.type,
+                "Expected pickleStep to have a type"
+              ),
               argument,
               parameterTypeRegistry: registry.parameterTypeRegistry,
               stepDefinitionHints: {
