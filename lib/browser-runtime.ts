@@ -57,14 +57,7 @@ import { indent, stripIndent } from "./helpers/strings";
 
 import { generateSnippet } from "./helpers/snippets";
 
-<<<<<<< HEAD:lib/create-tests.ts
-import {
-  runStepWithLogGroup,
-  runStepWithLogGroupAndCompanionTable,
-} from "./cypress";
-=======
 import { runStepWithLogGroup } from "./helpers/cypress";
->>>>>>> master:lib/browser-runtime.ts
 
 import { getTags } from "./helpers/environment";
 

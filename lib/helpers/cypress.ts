@@ -1,8 +1,4 @@
-<<<<<<< HEAD:lib/cypress.ts
-import DataTable from "./data_table";
-=======
 import { CypressCucumberError } from "./error";
->>>>>>> master:lib/helpers/cypress.ts
 
 const ensureChain = (value: unknown): Cypress.Chainable<unknown> =>
   Cypress.isCy(value) ? value : cy.wrap(value, { log: false });
