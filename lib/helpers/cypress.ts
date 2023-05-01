@@ -50,7 +50,6 @@ export function runStepWithLogGroupAndCompanionTable(
 
   function getMaxColumnWidths(tableArray: any) {
     const maxColumnWidths: any[] = [];
-
     for (const row of tableArray) {
       for (let i = 0; i < row.length; i++) {
         const cell = row[i];
@@ -58,7 +57,6 @@ export function runStepWithLogGroupAndCompanionTable(
         maxColumnWidths[i] = Math.max(maxColumnWidths[i] || 0, cellWidth);
       }
     }
-
     return maxColumnWidths;
   }
 
@@ -74,17 +72,14 @@ export function runStepWithLogGroupAndCompanionTable(
   function convertArrayToTableString(tableArray: any[]) {
     const maxColumnWidths = getMaxColumnWidths(tableArray);
     const paddedTableArray = padElements(tableArray, maxColumnWidths);
-    const lines = paddedTableArray.map((row) => row.join("|"));
-    const tableString = lines.join("\n");
+    const lines = paddedTableArray.map((row) => row.join("&nbsp;|&nbsp;"));
+    const tableString = lines.join("&nbsp;|\n&nbsp;&nbsp;|&nbsp;");
     return tableString;
   }
 
-  const result = convertArrayToTableString(rawTable);
-  //&nbsp;
-
   Cypress.log({
     name: "",
-    message: "|" + result + "&nbsp;|",
+    message: "|&nbsp;" + convertArrayToTableString(rawTable) + "&nbsp;|",
     groupStart: false,
   } as object);
 
