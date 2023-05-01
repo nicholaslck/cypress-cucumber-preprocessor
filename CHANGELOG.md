@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v17.0.0
 
 - Detect erroneous use of async / await and fail fast, relates to [#903](https://github.com/badeball/cypress-cucumber-preprocessor/issues/903).
 
