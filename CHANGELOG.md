@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## v17.0.0
 
+Breaking changes:
+
+- Drop support for Cypress v9.
+
+- Node v18 or beyond is now required.
+
+- The package now utilizes [Conditional Exports](https://nodejs.org/api/packages.html#conditional-exports) and you may have to set `moduleResolution` to `node16` in your `tsconfig.json` depending on what parts of the package you use (assuming you're using TypeScript).
+
+Other changes:
+
 - Detect erroneous use of async / await and fail fast, relates to [#903](https://github.com/badeball/cypress-cucumber-preprocessor/issues/903).
 
 - More precise snippet suggestions, fixes [#974](https://github.com/badeball/cypress-cucumber-preprocessor/issues/974).
@@ -13,10 +23,6 @@ All notable changes to this project will be documented in this file.
 - Visualize hook filters properly, fixes [#922](https://github.com/badeball/cypress-cucumber-preprocessor/issues/922).
 
 - Handle re-runs gracefully, fixes [#944](https://github.com/badeball/cypress-cucumber-preprocessor/issues/944).
-
-- Drop support for Cypress v9.
-
-- Node v18 or beyond is now required.
 
 This version contains some significant changes to the implementation, specifically regarding Cucumber messages. The backend is now more stateful to handle corner cases. However, the backend is also less forgivable than before. Thus, I (the author) expect some issues to arise out of this. If you have found an issue with this version, please open up a ticket.
 
