@@ -12,6 +12,18 @@ Breaking changes:
 
 - The package now utilizes [Conditional Exports](https://nodejs.org/api/packages.html#conditional-exports) and you may have to set `moduleResolution` to `node16` in your `tsconfig.json` depending on what parts of the package you use (assuming you're using TypeScript).
 
+  - TypeScript users that are unable to upgrade `moduleResolution` to `node16`, can use the `paths` property as a workaround, like shown below.
+
+    ```
+    {
+      "compilerOptions": {
+        "paths": {
+          "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/bundler-utils/*"]
+        }
+      }
+    }
+    ```
+
 Other changes:
 
 - Detect erroneous use of async / await and fail fast, relates to [#903](https://github.com/badeball/cypress-cucumber-preprocessor/issues/903).
