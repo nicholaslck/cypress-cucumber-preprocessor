@@ -319,21 +319,21 @@ interface IEnvironmentOverrides {
 }
 
 export interface IUserConfiguration {
-  readonly stepDefinitions?: string | string[];
-  readonly messages?: {
+  stepDefinitions?: string | string[];
+  messages?: {
     enabled: boolean;
     output?: string;
   };
-  readonly json?: {
+  json?: {
     enabled: boolean;
     output?: string;
   };
-  readonly html?: {
+  html?: {
     enabled: boolean;
     output?: string;
   };
-  readonly filterSpecs?: boolean;
-  readonly omitFiltered?: boolean;
+  filterSpecs?: boolean;
+  omitFiltered?: boolean;
 }
 
 export interface IPreprocessorConfiguration {
