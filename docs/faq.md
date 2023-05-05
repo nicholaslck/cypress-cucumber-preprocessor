@@ -10,6 +10,7 @@
 * [JSON reports aren't generated in open / interactive mode](#json-reports-arent-generated-in-open--interactive-mode)
 * [I get `cypress_esbuild_preprocessor_1.createBundler is not a function`](#i-get-cypress_esbuild_preprocessor_1createbundler-is-not-a-function)
 * [I get `cypress_esbuild_preprocessor_1.default is not a function`](#i-get-cypress_esbuild_preprocessor_1default-is-not-a-function)
+* [I get `Cannot find module '@badeball/cypress-cucumber-preprocessor/esbuild'`](#i-get-cannot-find-module-badeballcypress-cucumber-preprocessoresbuild)
 * [The members `And(..)` and `But(..)` are missing](#function-members-and-and-but-are-missing)
 * [Negated tags / complex tag expressions aren't working as expected](#negated-tags--complex-tag-expressions-arent-working-as-expected)
 
@@ -58,6 +59,20 @@ However, I recommend just using `esModuleInterop: true` if you don't fully under
 ## I get `cypress_esbuild_preprocessor_1.default is not a function`
 
 See answer above.
+
+## I get `Cannot find module '@badeball/cypress-cucumber-preprocessor/esbuild'`
+
+Set `compilerOptions.moduleResolution` to `node16` in your `tsconfig.json`. Users that are unable to upgrade `moduleResolution` to `node16`, can use the `paths` property as a workaround, like shown below.
+
+```
+{
+  "compilerOptions": {
+    "paths": {
+      "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/bundler-utils/*"]
+    }
+  }
+}
+```
 
 ## Function members `And(..)` and `But(..)` are missing
 
