@@ -370,12 +370,7 @@ export function combineIntoConfiguration(
   const defaultStepDefinitions = DEFAULT_STEP_DEFINITIONS.map((pattern) =>
     pattern.replace(
       "[integration-directory]",
-      ensureIsRelative(
-        cypress.projectRoot,
-        "integrationFolder" in cypress
-          ? cypress.integrationFolder
-          : implicitIntegrationFolder
-      )
+      ensureIsRelative(cypress.projectRoot, implicitIntegrationFolder)
     )
   );
 

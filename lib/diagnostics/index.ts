@@ -307,7 +307,10 @@ export async function execute(options: {
   env: NodeJS.ProcessEnv;
   cwd: string;
 }): Promise<void> {
-  const cypress = resolveCypressConfiguration(options);
+  const cypress = resolveCypressConfiguration({
+    ...options,
+    testingType: "e2e",
+  });
 
   const implicitIntegrationFolder = assertAndReturn(
     ancestor(...getTestFiles(cypress).map(path.dirname).map(path.normalize)),

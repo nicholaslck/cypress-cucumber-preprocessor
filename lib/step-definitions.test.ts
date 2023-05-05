@@ -1,99 +1,33 @@
 import util from "util";
 
-import path from "path";
-
 import assert from "assert";
 
-import {
-  ICypressPost10Configuration,
-  ICypressPre10Configuration,
-} from "@badeball/cypress-configuration";
+import { ICypressConfiguration } from "@badeball/cypress-configuration";
 
 import {
-  IPreprocessorConfiguration,
   IUserConfiguration,
   combineIntoConfiguration,
 } from "./preprocessor-configuration";
 
-import {
-  getStepDefinitionPatternsPost10,
-  getStepDefinitionPatternsPre10,
-  pathParts,
-} from "./step-definitions";
+import { getStepDefinitionPatterns, pathParts } from "./step-definitions";
 
-const DUMMY_PRE10_CONFIG: ICypressPre10Configuration = {
-  projectRoot: "",
-  integrationFolder: "",
-  fixturesFolder: "",
-  supportFile: false,
-  testFiles: [],
-  ignoreTestFiles: [],
-  env: {},
-};
-
-function pre10example(
-  filepath: string,
-  partialCypressConfiguration: Partial<ICypressPre10Configuration>,
-  preprocessorConfiguration: Partial<IPreprocessorConfiguration>,
-  expected: string[]
-) {
-  const cypressConfiguration: ICypressPre10Configuration = {
-    ...DUMMY_PRE10_CONFIG,
-    ...partialCypressConfiguration,
-  };
-
-  it(`should return [${expected.join(
-    ", "
-  )}] for ${filepath} with ${util.inspect(preprocessorConfiguration)} in ${
-    cypressConfiguration.projectRoot
-  }`, () => {
-    const actual = getStepDefinitionPatternsPre10(
-      {
-        cypress: cypressConfiguration,
-        preprocessor: combineIntoConfiguration(
-          preprocessorConfiguration,
-          {},
-          cypressConfiguration,
-          path.dirname(filepath)
-        ),
-      },
-      filepath
-    );
-
-    const throwUnequal = () => {
-      throw new Error(
-        `Expected ${util.inspect(expected)}, but got ${util.inspect(actual)}`
-      );
-    };
-
-    if (expected.length !== actual.length) {
-      throwUnequal();
-    }
-
-    for (let i = 0; i < expected.length; i++) {
-      if (expected[i] !== actual[i]) {
-        throwUnequal();
-      }
-    }
-  });
-}
-
-const DUMMY_POST10_CONFIG: ICypressPost10Configuration = {
+const DUMMY_CONFIG: ICypressConfiguration = {
+  testingType: "e2e",
   projectRoot: "",
   specPattern: [],
   excludeSpecPattern: [],
   env: {},
 };
 
-function post10example(
+function example(
   filepath: string,
-  partialCypressConfiguration: Partial<ICypressPost10Configuration>,
+  partialCypressConfiguration: Partial<ICypressConfiguration>,
   preprocessorConfiguration: IUserConfiguration,
   implicitIntegrationFolder: string,
   expected: string[]
 ) {
-  const cypressConfiguration: ICypressPost10Configuration = {
-    ...DUMMY_POST10_CONFIG,
+  const cypressConfiguration: ICypressConfiguration = {
+    ...DUMMY_CONFIG,
     ...partialCypressConfiguration,
   };
 
@@ -102,7 +36,7 @@ function post10example(
   )}] for ${filepath} with ${util.inspect(preprocessorConfiguration)} in ${
     cypressConfiguration.projectRoot
   }`, () => {
-    const actual = getStepDefinitionPatternsPost10(
+    const actual = getStepDefinitionPatterns(
       {
         cypress: cypressConfiguration,
         preprocessor: combineIntoConfiguration(
@@ -144,87 +78,8 @@ describe("pathParts()", () => {
   });
 });
 
-describe("getStepDefinitionPatternsPre10()", () => {
-  pre10example(
-    "/foo/bar/cypress/integration/baz.feature",
-    {
-      projectRoot: "/foo/bar",
-      integrationFolder: "cypress/integration",
-    },
-    {},
-    [
-      "/foo/bar/cypress/integration/baz/**/*.{js,mjs,ts,tsx}",
-      "/foo/bar/cypress/integration/baz.{js,mjs,ts,tsx}",
-      "/foo/bar/cypress/support/step_definitions/**/*.{js,mjs,ts,tsx}",
-    ]
-  );
-
-  pre10example(
-    "/cypress/integration/foo/bar/baz.feature",
-    {
-      projectRoot: "/",
-      integrationFolder: "cypress/integration",
-    },
-    {
-      stepDefinitions: "cypress/integration/[filepath]/step_definitions/*.ts",
-    },
-    ["/cypress/integration/foo/bar/baz/step_definitions/*.ts"]
-  );
-
-  pre10example(
-    "/cypress/integration/foo/bar/baz.feature",
-    {
-      projectRoot: "/",
-      integrationFolder: "cypress/integration",
-    },
-    {
-      stepDefinitions: "cypress/integration/[filepart]/step_definitions/*.ts",
-    },
-    [
-      "/cypress/integration/foo/bar/baz/step_definitions/*.ts",
-      "/cypress/integration/foo/bar/step_definitions/*.ts",
-      "/cypress/integration/foo/step_definitions/*.ts",
-      "/cypress/integration/step_definitions/*.ts",
-    ]
-  );
-
-  it("should error when provided a path not within integrationFolder", () => {
-    assert.throws(() => {
-      getStepDefinitionPatternsPre10(
-        {
-          cypress: {
-            projectRoot: "/foo/bar",
-            integrationFolder: "cypress/integration",
-          },
-          preprocessor: {
-            stepDefinitions: [],
-          },
-        },
-        "/foo/bar/cypress/features/baz.feature"
-      );
-    }, "/foo/bar/cypress/features/baz.feature is not within cypress/integration");
-  });
-
-  it("should error when provided a path not within cwd", () => {
-    assert.throws(() => {
-      getStepDefinitionPatternsPre10(
-        {
-          cypress: {
-            projectRoot: "/baz",
-            integrationFolder: "cypress/integration",
-          },
-          preprocessor: {
-            stepDefinitions: [],
-          },
-        },
-        "/foo/bar/cypress/integration/baz.feature"
-      );
-    }, "/foo/bar/cypress/features/baz.feature is not within /baz");
-  });
-});
-
-describe("getStepDefinitionPatternsPost10()", () => {
-  post10example(
+describe("getStepDefinitionPatterns()", () => {
+  example(
     "/foo/bar/cypress/e2e/baz.feature",
     {
       projectRoot: "/foo/bar",
@@ -238,7 +93,7 @@ describe("getStepDefinitionPatternsPost10()", () => {
     ]
   );
 
-  post10example(
+  example(
     "/cypress/e2e/foo/bar/baz.feature",
     {
       projectRoot: "/",
@@ -250,7 +105,7 @@ describe("getStepDefinitionPatternsPost10()", () => {
     ["/cypress/e2e/foo/bar/baz/step_definitions/*.ts"]
   );
 
-  post10example(
+  example(
     "/cypress/e2e/foo/bar/baz.feature",
     {
       projectRoot: "/",
@@ -269,7 +124,7 @@ describe("getStepDefinitionPatternsPost10()", () => {
 
   it("should error when provided a path not within cwd", () => {
     assert.throws(() => {
-      getStepDefinitionPatternsPost10(
+      getStepDefinitionPatterns(
         {
           cypress: {
             projectRoot: "/baz",

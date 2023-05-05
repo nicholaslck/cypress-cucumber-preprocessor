@@ -1,4 +1,4 @@
-import { ICypressPost10Configuration } from "@badeball/cypress-configuration";
+import { ICypressConfiguration } from "@badeball/cypress-configuration";
 
 import assert from "assert";
 
@@ -8,7 +8,8 @@ import {
   resolve,
 } from "./preprocessor-configuration";
 
-const DUMMY_POST10_CONFIG: ICypressPost10Configuration = {
+const DUMMY_POST10_CONFIG: ICypressConfiguration = {
+  testingType: "e2e",
   projectRoot: "",
   specPattern: [],
   excludeSpecPattern: [],
