@@ -381,5 +381,7 @@ export async function execute(options: {
 }
 
 if (require.main === module) {
-  execute({ argv: process.argv, env: process.env, cwd: process.cwd() });
+  execute({ argv: process.argv, env: process.env, cwd: process.cwd() }).catch(
+    console.error
+  );
 }

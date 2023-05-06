@@ -52,41 +52,37 @@ function basicBooleanExample(options: {
 }) {
   const { environmentKey, setValueFn, getValueFn } = options;
 
-  it("default", async () => {
+  it("default", () =>
     test({
       getValueFn,
       environment: {},
       configuration: {},
       expectedValue: options.default,
-    });
-  });
+    }));
 
-  it("override by explicit configuration (boolean)", () => {
+  it("override by explicit configuration (boolean)", () =>
     test({
       getValueFn,
       environment: {},
       configuration: createUserConfiguration({ setValueFn, value: true }),
       expectedValue: true,
-    });
-  });
+    }));
 
-  it("override by environment (boolean)", () => {
+  it("override by environment (boolean)", () =>
     test({
       getValueFn,
       environment: { [environmentKey]: true },
       configuration: {},
       expectedValue: true,
-    });
-  });
+    }));
 
-  it("precedence", () => {
+  it("precedence", () =>
     test({
       getValueFn,
       environment: { [environmentKey]: true },
       configuration: createUserConfiguration({ setValueFn, value: false }),
       expectedValue: true,
-    });
-  });
+    }));
 
   describe("environment string interpretation", () => {
     const matrix = [
@@ -97,7 +93,7 @@ function basicBooleanExample(options: {
     ];
 
     for (const { environmentValue, expectedValue } of matrix) {
-      it(JSON.stringify(environmentValue), () => {
+      it(JSON.stringify(environmentValue), () =>
         test({
           getValueFn,
           environment: { [environmentKey]: environmentValue },
@@ -106,12 +102,12 @@ function basicBooleanExample(options: {
             value: !expectedValue,
           }),
           expectedValue: expectedValue,
-        });
-      });
+        })
+      );
     }
 
     // defers to next value
-    it('"" and explicit value', () => {
+    it('"" and explicit value', () =>
       test({
         getValueFn,
         environment: { [environmentKey]: "" },
@@ -120,17 +116,15 @@ function basicBooleanExample(options: {
           value: true,
         }),
         expectedValue: true,
-      });
-    });
+      }));
 
-    it('"" and no explicit values', () => {
+    it('"" and no explicit values', () =>
       test({
         getValueFn,
         environment: { [environmentKey]: "" },
         configuration: {},
         expectedValue: false,
-      });
-    });
+      }));
   });
 }
 
@@ -142,41 +136,37 @@ function basicStringExample(options: {
 }) {
   const { environmentKey, setValueFn, getValueFn } = options;
 
-  it("default", async () => {
+  it("default", () =>
     test({
       getValueFn,
       environment: {},
       configuration: {},
       expectedValue: options.default,
-    });
-  });
+    }));
 
-  it("override by explicit configuration", () => {
+  it("override by explicit configuration", () =>
     test({
       getValueFn,
       environment: {},
       configuration: createUserConfiguration({ setValueFn, value: "foo" }),
       expectedValue: "foo",
-    });
-  });
+    }));
 
-  it("override by environment", () => {
+  it("override by environment", () =>
     test({
       getValueFn,
       environment: { [environmentKey]: "foo" },
       configuration: {},
       expectedValue: "foo",
-    });
-  });
+    }));
 
-  it("precedence", () => {
+  it("precedence", () =>
     test({
       getValueFn,
       environment: { [environmentKey]: "bar" },
       configuration: createUserConfiguration({ setValueFn, value: "foo" }),
       expectedValue: "bar",
-    });
-  });
+    }));
 }
 
 describe("resolve()", () => {
@@ -350,10 +340,10 @@ describe("resolve()", () => {
 
     describe("output", () => {
       const getValueFn = (configuration: IPreprocessorConfiguration): string =>
-        configuration.json.output;
+        configuration.html.output;
 
       const setValueFn = (configuration: IUserConfiguration, value: string) =>
-        (configuration.json = { enabled: true, output: value });
+        (configuration.html = { enabled: true, output: value });
 
       basicStringExample({
         default: "cucumber-report.html",
