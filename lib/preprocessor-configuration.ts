@@ -404,40 +404,66 @@ export function combineIntoConfiguration(
     )
   );
 
+  const specific = configuration[cypress.testingType];
+  const unspecific = configuration;
+
   const stepDefinitions: IPreprocessorConfiguration["stepDefinitions"] =
     overrides.stepDefinitions ??
-    configuration.stepDefinitions ??
+    unspecific.stepDefinitions ??
     defaultStepDefinitions;
 
   const json: IPreprocessorConfiguration["json"] = {
-    enabled: overrides.jsonEnabled ?? configuration.json?.enabled ?? false,
+    enabled:
+      overrides.jsonEnabled ??
+      specific?.json?.enabled ??
+      unspecific.json?.enabled ??
+      false,
     output:
       overrides.jsonOutput ??
-      (configuration.json?.output || "cucumber-report.json"),
+      specific?.json?.output ??
+      unspecific.json?.output ??
+      "cucumber-report.json",
   };
 
   const html: IPreprocessorConfiguration["html"] = {
-    enabled: overrides.htmlEnabled ?? configuration.html?.enabled ?? false,
+    enabled:
+      overrides.htmlEnabled ??
+      specific?.html?.enabled ??
+      unspecific.html?.enabled ??
+      false,
     output:
       overrides.htmlOutput ??
-      (configuration.html?.output || "cucumber-report.html"),
+      specific?.html?.output ??
+      unspecific.html?.output ??
+      "cucumber-report.html",
   };
 
   const messages: IPreprocessorConfiguration["messages"] = {
     enabled:
       json.enabled ||
       html.enabled ||
-      (overrides.messagesEnabled ?? configuration.messages?.enabled ?? false),
+      (overrides.messagesEnabled ??
+        specific?.messages?.enabled ??
+        unspecific.messages?.enabled ??
+        false),
     output:
       overrides.messagesOutput ??
-      (configuration.messages?.output || "cucumber-messages.ndjson"),
+      specific?.messages?.output ??
+      unspecific.messages?.output ??
+      "cucumber-messages.ndjson",
   };
 
   const filterSpecs: IPreprocessorConfiguration["filterSpecs"] =
-    overrides.filterSpecs ?? configuration.filterSpecs ?? false;
+    overrides.filterSpecs ??
+    specific?.filterSpecs ??
+    unspecific.filterSpecs ??
+    false;
 
   const omitFiltered: IPreprocessorConfiguration["omitFiltered"] =
-    overrides.omitFiltered ?? configuration.omitFiltered ?? false;
+    overrides.omitFiltered ??
+    specific?.omitFiltered ??
+    unspecific.omitFiltered ??
+    false;
 
   return {
     stepDefinitions,
