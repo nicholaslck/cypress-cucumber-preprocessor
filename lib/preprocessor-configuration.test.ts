@@ -1,29 +1,37 @@
-import { ICypressConfiguration } from "@badeball/cypress-configuration";
+import {
+  TestingType,
+  ICypressConfiguration,
+} from "@badeball/cypress-configuration";
 
 import assert from "assert";
 
 import {
+  IBaseUserConfiguration,
   IPreprocessorConfiguration,
   IUserConfiguration,
   resolve,
 } from "./preprocessor-configuration";
 
-const DUMMY_POST10_CONFIG: ICypressConfiguration = {
-  testingType: "e2e",
+const DUMMY_POST10_CONFIG: Omit<ICypressConfiguration, "testingType"> = {
   projectRoot: "",
   specPattern: [],
   excludeSpecPattern: [],
   env: {},
 };
 
+type GetValueFn<T> = (configuration: IPreprocessorConfiguration) => T;
+
+type SetValueFn<T> = (configuration: IBaseUserConfiguration, value: T) => void;
+
 async function test<T>(options: {
+  testingType: TestingType;
   environment: Record<string, unknown>;
   configuration: IUserConfiguration;
   expectedValue: T;
-  getValueFn(configuration: IPreprocessorConfiguration): T;
+  getValueFn: GetValueFn<T>;
 }) {
   const configuration = await resolve(
-    DUMMY_POST10_CONFIG,
+    { ...DUMMY_POST10_CONFIG, testingType: options.testingType },
     options.environment,
     "cypress/e2e",
     () => options.configuration
@@ -36,51 +44,90 @@ async function test<T>(options: {
 }
 
 function createUserConfiguration<T>(options: {
-  setValueFn(configuration: IUserConfiguration, value: T): void;
+  setValueFn: SetValueFn<T>;
   value: T;
-}): IUserConfiguration {
-  const configuration: IUserConfiguration = {};
+}): IBaseUserConfiguration {
+  const configuration: IBaseUserConfiguration = {};
   options.setValueFn(configuration, options.value);
   return configuration;
 }
 
 function basicBooleanExample(options: {
+  testingType: TestingType;
   default: boolean;
   environmentKey: string;
-  setValueFn(configuration: IUserConfiguration, value: boolean): void;
-  getValueFn(configuration: IPreprocessorConfiguration): boolean;
+  setValueFn: SetValueFn<boolean>;
+  getValueFn: GetValueFn<boolean>;
 }) {
-  const { environmentKey, setValueFn, getValueFn } = options;
+  const { testingType, environmentKey, setValueFn, getValueFn } = options;
 
   it("default", () =>
     test({
+      testingType,
       getValueFn,
       environment: {},
       configuration: {},
       expectedValue: options.default,
     }));
 
-  it("override by explicit configuration (boolean)", () =>
+  it("override by explicit, type-unspecific configuration (boolean)", () =>
     test({
+      testingType,
       getValueFn,
       environment: {},
       configuration: createUserConfiguration({ setValueFn, value: true }),
       expectedValue: true,
     }));
 
+  it("override by explicit, type-specific configuration (boolean)", () =>
+    test({
+      testingType,
+      getValueFn,
+      environment: {},
+      configuration: {
+        [testingType]: createUserConfiguration({ setValueFn, value: true }),
+      },
+      expectedValue: true,
+    }));
+
   it("override by environment (boolean)", () =>
     test({
+      testingType,
       getValueFn,
       environment: { [environmentKey]: true },
       configuration: {},
       expectedValue: true,
     }));
 
-  it("precedence", () =>
+  it("precedence (environment over explicit, type-unspecific)", () =>
     test({
+      testingType,
       getValueFn,
       environment: { [environmentKey]: true },
       configuration: createUserConfiguration({ setValueFn, value: false }),
+      expectedValue: true,
+    }));
+
+  it("precedence (environment over explicit, type-specific)", () =>
+    test({
+      testingType,
+      getValueFn,
+      environment: { [environmentKey]: true },
+      configuration: {
+        [testingType]: createUserConfiguration({ setValueFn, value: false }),
+      },
+      expectedValue: true,
+    }));
+
+  it("precedence (explicit, type-specific over type-unspecific)", () =>
+    test({
+      testingType,
+      getValueFn,
+      environment: {},
+      configuration: {
+        [testingType]: createUserConfiguration({ setValueFn, value: true }),
+        ...createUserConfiguration({ setValueFn, value: false }),
+      },
       expectedValue: true,
     }));
 
@@ -95,6 +142,7 @@ function basicBooleanExample(options: {
     for (const { environmentValue, expectedValue } of matrix) {
       it(JSON.stringify(environmentValue), () =>
         test({
+          testingType,
           getValueFn,
           environment: { [environmentKey]: environmentValue },
           configuration: createUserConfiguration({
@@ -109,6 +157,7 @@ function basicBooleanExample(options: {
     // defers to next value
     it('"" and explicit value', () =>
       test({
+        testingType,
         getValueFn,
         environment: { [environmentKey]: "" },
         configuration: createUserConfiguration({
@@ -120,6 +169,7 @@ function basicBooleanExample(options: {
 
     it('"" and no explicit values', () =>
       test({
+        testingType,
         getValueFn,
         environment: { [environmentKey]: "" },
         configuration: {},
@@ -129,258 +179,341 @@ function basicBooleanExample(options: {
 }
 
 function basicStringExample(options: {
+  testingType: TestingType;
   default: string;
   environmentKey: string;
-  setValueFn(configuration: IUserConfiguration, value: string): void;
-  getValueFn(configuration: IPreprocessorConfiguration): string;
+  setValueFn: SetValueFn<string>;
+  getValueFn: GetValueFn<string>;
 }) {
-  const { environmentKey, setValueFn, getValueFn } = options;
+  const { testingType, environmentKey, setValueFn, getValueFn } = options;
 
   it("default", () =>
     test({
+      testingType,
       getValueFn,
       environment: {},
       configuration: {},
       expectedValue: options.default,
     }));
 
-  it("override by explicit configuration", () =>
+  it("override by explicit, type-unspecific configuration", () =>
     test({
+      testingType,
       getValueFn,
       environment: {},
       configuration: createUserConfiguration({ setValueFn, value: "foo" }),
       expectedValue: "foo",
     }));
 
+  it("override by explicit, type-specific configuration", () =>
+    test({
+      testingType,
+      getValueFn,
+      environment: {},
+      configuration: {
+        [testingType]: createUserConfiguration({ setValueFn, value: "foo" }),
+      },
+      expectedValue: "foo",
+    }));
+
   it("override by environment", () =>
     test({
+      testingType,
       getValueFn,
       environment: { [environmentKey]: "foo" },
       configuration: {},
       expectedValue: "foo",
     }));
 
-  it("precedence", () =>
+  it("precedence (environment over explicit, type-unspecific)", () =>
     test({
+      testingType,
       getValueFn,
       environment: { [environmentKey]: "bar" },
       configuration: createUserConfiguration({ setValueFn, value: "foo" }),
       expectedValue: "bar",
     }));
+
+  it("precedence (environment over explicit, type-specific)", () =>
+    test({
+      testingType,
+      getValueFn,
+      environment: { [environmentKey]: "bar" },
+      configuration: {
+        [testingType]: createUserConfiguration({ setValueFn, value: "foo" }),
+      },
+      expectedValue: "bar",
+    }));
+
+  it("precedence (explicit, type-specific over type-unspecific)", () =>
+    test({
+      testingType,
+      getValueFn,
+      environment: {},
+      configuration: {
+        [testingType]: createUserConfiguration({ setValueFn, value: "foo" }),
+        ...createUserConfiguration({ setValueFn, value: "bar" }),
+      },
+      expectedValue: "foo",
+    }));
 }
 
 describe("resolve()", () => {
-  describe("stepDefinitions", () => {
-    const getValueFn = (
-      configuration: IPreprocessorConfiguration
-    ): string | string[] => configuration.stepDefinitions;
+  for (const testingType of ["e2e", "component"] as const) {
+    describe(testingType, () => {
+      describe("stepDefinitions", () => {
+        const getValueFn = (
+          configuration: IPreprocessorConfiguration
+        ): string | string[] => configuration.stepDefinitions;
 
-    it("default", () =>
-      test({
-        getValueFn,
-        environment: {},
-        configuration: {},
-        expectedValue: [
-          "cypress/e2e/[filepath]/**/*.{js,mjs,ts,tsx}",
-          "cypress/e2e/[filepath].{js,mjs,ts,tsx}",
-          "cypress/support/step_definitions/**/*.{js,mjs,ts,tsx}",
-        ],
-      }));
+        it("default", () =>
+          test({
+            testingType,
+            getValueFn,
+            environment: {},
+            configuration: {},
+            expectedValue: [
+              "cypress/e2e/[filepath]/**/*.{js,mjs,ts,tsx}",
+              "cypress/e2e/[filepath].{js,mjs,ts,tsx}",
+              "cypress/support/step_definitions/**/*.{js,mjs,ts,tsx}",
+            ],
+          }));
 
-    it("override by explicit configuration (string)", () =>
-      test({
-        getValueFn,
-        environment: {},
-        configuration: { stepDefinitions: "foo" },
-        expectedValue: "foo",
-      }));
+        it("override by explicit configuration (string)", () =>
+          test({
+            testingType,
+            getValueFn,
+            environment: {},
+            configuration: { stepDefinitions: "foo" },
+            expectedValue: "foo",
+          }));
 
-    it("override by explicit configuration (string[])", () =>
-      test({
-        getValueFn,
-        environment: {},
-        configuration: { stepDefinitions: ["foo"] },
-        expectedValue: ["foo"],
-      }));
+        it("override by explicit configuration (string[])", () =>
+          test({
+            testingType,
+            getValueFn,
+            environment: {},
+            configuration: { stepDefinitions: ["foo"] },
+            expectedValue: ["foo"],
+          }));
 
-    it("override by environment (string)", () =>
-      test({
-        getValueFn,
-        environment: { stepDefinitions: "foo" },
-        configuration: {},
-        expectedValue: "foo",
-      }));
+        it("override by environment (string)", () =>
+          test({
+            testingType,
+            getValueFn,
+            environment: { stepDefinitions: "foo" },
+            configuration: {},
+            expectedValue: "foo",
+          }));
 
-    it("override by environment (string[])", () =>
-      test({
-        getValueFn,
-        environment: { stepDefinitions: ["foo"] },
-        configuration: {},
-        expectedValue: ["foo"],
-      }));
+        it("override by environment (string[])", () =>
+          test({
+            testingType,
+            getValueFn,
+            environment: { stepDefinitions: ["foo"] },
+            configuration: {},
+            expectedValue: ["foo"],
+          }));
 
-    it("precedence", () =>
-      test({
-        getValueFn,
-        environment: { stepDefinitions: "bar" },
-        configuration: { stepDefinitions: "foo" },
-        expectedValue: "bar",
-      }));
-  });
-
-  describe("messages", () => {
-    describe("enabled", () => {
-      const getValueFn = (configuration: IPreprocessorConfiguration): boolean =>
-        configuration.messages.enabled;
-
-      const setValueFn = (configuration: IUserConfiguration, value: boolean) =>
-        (configuration.messages = { enabled: value });
-
-      basicBooleanExample({
-        default: false,
-        environmentKey: "messagesEnabled",
-        getValueFn,
-        setValueFn,
+        it("precedence", () =>
+          test({
+            testingType,
+            getValueFn,
+            environment: { stepDefinitions: "bar" },
+            configuration: { stepDefinitions: "foo" },
+            expectedValue: "bar",
+          }));
       });
 
-      it("overriden by json.enabled", () =>
-        test({
+      describe("messages", () => {
+        describe("enabled", () => {
+          const getValueFn = (
+            configuration: IPreprocessorConfiguration
+          ): boolean => configuration.messages.enabled;
+
+          const setValueFn = (
+            configuration: IBaseUserConfiguration,
+            value: boolean
+          ) => (configuration.messages = { enabled: value });
+
+          basicBooleanExample({
+            testingType,
+            default: false,
+            environmentKey: "messagesEnabled",
+            getValueFn,
+            setValueFn,
+          });
+
+          it("overriden by json.enabled", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: {
+                messages: {
+                  enabled: false,
+                },
+                json: {
+                  enabled: true,
+                },
+              },
+              expectedValue: true,
+            }));
+
+          it("overriden by html.enabled", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: {
+                messages: {
+                  enabled: false,
+                },
+                html: {
+                  enabled: true,
+                },
+              },
+              expectedValue: true,
+            }));
+        });
+
+        describe("output", () => {
+          const getValueFn = (
+            configuration: IPreprocessorConfiguration
+          ): string => configuration.messages.output;
+
+          const setValueFn = (
+            configuration: IBaseUserConfiguration,
+            value: string
+          ) => (configuration.messages = { enabled: true, output: value });
+
+          basicStringExample({
+            testingType,
+            default: "cucumber-messages.ndjson",
+            environmentKey: "messagesOutput",
+            getValueFn,
+            setValueFn,
+          });
+        });
+      });
+
+      describe("json", () => {
+        describe("enabled", () => {
+          const getValueFn = (
+            configuration: IPreprocessorConfiguration
+          ): boolean => configuration.json.enabled;
+
+          const setValueFn = (
+            configuration: IBaseUserConfiguration,
+            value: boolean
+          ) => (configuration.json = { enabled: value });
+
+          basicBooleanExample({
+            testingType,
+            default: false,
+            environmentKey: "jsonEnabled",
+            getValueFn,
+            setValueFn,
+          });
+        });
+
+        describe("output", () => {
+          const getValueFn = (
+            configuration: IPreprocessorConfiguration
+          ): string => configuration.json.output;
+
+          const setValueFn = (
+            configuration: IUserConfiguration,
+            value: string
+          ) => (configuration.json = { enabled: true, output: value });
+
+          basicStringExample({
+            testingType,
+            default: "cucumber-report.json",
+            environmentKey: "jsonOutput",
+            getValueFn,
+            setValueFn,
+          });
+        });
+      });
+
+      describe("html", () => {
+        describe("enabled", () => {
+          const getValueFn = (
+            configuration: IPreprocessorConfiguration
+          ): boolean => configuration.html.enabled;
+
+          const setValueFn = (
+            configuration: IBaseUserConfiguration,
+            value: boolean
+          ) => (configuration.html = { enabled: value });
+
+          basicBooleanExample({
+            testingType,
+            default: false,
+            environmentKey: "htmlEnabled",
+            getValueFn,
+            setValueFn,
+          });
+        });
+
+        describe("output", () => {
+          const getValueFn = (
+            configuration: IPreprocessorConfiguration
+          ): string => configuration.html.output;
+
+          const setValueFn = (
+            configuration: IUserConfiguration,
+            value: string
+          ) => (configuration.html = { enabled: true, output: value });
+
+          basicStringExample({
+            testingType,
+            default: "cucumber-report.html",
+            environmentKey: "htmlOutput",
+            getValueFn,
+            setValueFn,
+          });
+        });
+      });
+
+      describe("filterSpecs", () => {
+        const getValueFn = (
+          configuration: IPreprocessorConfiguration
+        ): boolean => configuration.filterSpecs;
+
+        const setValueFn = (
+          configuration: IBaseUserConfiguration,
+          value: boolean
+        ) => (configuration.filterSpecs = value);
+
+        basicBooleanExample({
+          testingType,
+          default: false,
+          environmentKey: "filterSpecs",
           getValueFn,
-          environment: {},
-          configuration: {
-            messages: {
-              enabled: false,
-            },
-            json: {
-              enabled: true,
-            },
-          },
-          expectedValue: true,
-        }));
+          setValueFn,
+        });
+      });
 
-      it("overriden by html.enabled", () =>
-        test({
+      describe("omitFiltered", () => {
+        const getValueFn = (
+          configuration: IPreprocessorConfiguration
+        ): boolean => configuration.omitFiltered;
+
+        const setValueFn = (
+          configuration: IBaseUserConfiguration,
+          value: boolean
+        ) => (configuration.omitFiltered = value);
+
+        basicBooleanExample({
+          testingType,
+          default: false,
+          environmentKey: "omitFiltered",
           getValueFn,
-          environment: {},
-          configuration: {
-            messages: {
-              enabled: false,
-            },
-            html: {
-              enabled: true,
-            },
-          },
-          expectedValue: true,
-        }));
-    });
-
-    describe("output", () => {
-      const getValueFn = (configuration: IPreprocessorConfiguration): string =>
-        configuration.messages.output;
-
-      const setValueFn = (configuration: IUserConfiguration, value: string) =>
-        (configuration.messages = { enabled: true, output: value });
-
-      basicStringExample({
-        default: "cucumber-messages.ndjson",
-        environmentKey: "messagesOutput",
-        getValueFn,
-        setValueFn,
+          setValueFn,
+        });
       });
     });
-  });
-
-  describe("json", () => {
-    describe("enabled", () => {
-      const getValueFn = (configuration: IPreprocessorConfiguration): boolean =>
-        configuration.json.enabled;
-
-      const setValueFn = (configuration: IUserConfiguration, value: boolean) =>
-        (configuration.json = { enabled: value });
-
-      basicBooleanExample({
-        default: false,
-        environmentKey: "jsonEnabled",
-        getValueFn,
-        setValueFn,
-      });
-    });
-
-    describe("output", () => {
-      const getValueFn = (configuration: IPreprocessorConfiguration): string =>
-        configuration.json.output;
-
-      const setValueFn = (configuration: IUserConfiguration, value: string) =>
-        (configuration.json = { enabled: true, output: value });
-
-      basicStringExample({
-        default: "cucumber-report.json",
-        environmentKey: "jsonOutput",
-        getValueFn,
-        setValueFn,
-      });
-    });
-  });
-
-  describe("html", () => {
-    describe("enabled", () => {
-      const getValueFn = (configuration: IPreprocessorConfiguration): boolean =>
-        configuration.html.enabled;
-
-      const setValueFn = (configuration: IUserConfiguration, value: boolean) =>
-        (configuration.html = { enabled: value });
-
-      basicBooleanExample({
-        default: false,
-        environmentKey: "htmlEnabled",
-        getValueFn,
-        setValueFn,
-      });
-    });
-
-    describe("output", () => {
-      const getValueFn = (configuration: IPreprocessorConfiguration): string =>
-        configuration.html.output;
-
-      const setValueFn = (configuration: IUserConfiguration, value: string) =>
-        (configuration.html = { enabled: true, output: value });
-
-      basicStringExample({
-        default: "cucumber-report.html",
-        environmentKey: "htmlOutput",
-        getValueFn,
-        setValueFn,
-      });
-    });
-  });
-
-  describe("filterSpecs", () => {
-    const getValueFn = (configuration: IPreprocessorConfiguration): boolean =>
-      configuration.filterSpecs;
-
-    const setValueFn = (configuration: IUserConfiguration, value: boolean) =>
-      (configuration.filterSpecs = value);
-
-    basicBooleanExample({
-      default: false,
-      environmentKey: "filterSpecs",
-      getValueFn,
-      setValueFn,
-    });
-  });
-
-  describe("omitFiltered", () => {
-    const getValueFn = (configuration: IPreprocessorConfiguration): boolean =>
-      configuration.omitFiltered;
-
-    const setValueFn = (configuration: IUserConfiguration, value: boolean) =>
-      (configuration.omitFiltered = value);
-
-    basicBooleanExample({
-      default: false,
-      environmentKey: "omitFiltered",
-      getValueFn,
-      setValueFn,
-    });
-  });
+  }
 });

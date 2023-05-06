@@ -21,6 +21,10 @@ function hasOwnProperty<X extends Record<string, unknown>, Y extends string>(
   return Object.prototype.hasOwnProperty.call(value, property);
 }
 
+function isPlainObject(value: any): value is object {
+  return value?.constructor === Object;
+}
+
 function validateUserConfigurationEntry(
   key: string,
   value: Record<string, unknown>
@@ -153,9 +157,30 @@ function validateUserConfigurationEntry(
       }
       return { [key]: value };
     }
+    case "e2e":
+      return { [key]: validateUserConfiguration(value) };
+    case "component":
+      return { [key]: validateUserConfiguration(value) };
     default:
       return {};
   }
+}
+
+function validateUserConfiguration(configuration: object): IUserConfiguration {
+  if (!isPlainObject(configuration)) {
+    throw new Error(
+      `Malformed configuration, expected an object, but got ${util.inspect(
+        configuration
+      )}`
+    );
+  }
+
+  return Object.assign(
+    {},
+    ...Object.entries(configuration).map((entry) =>
+      validateUserConfigurationEntry(...entry)
+    )
+  );
 }
 
 function validateEnvironmentOverrides(
@@ -318,7 +343,7 @@ interface IEnvironmentOverrides {
   omitFiltered?: boolean;
 }
 
-export interface IUserConfiguration {
+export interface IBaseUserConfiguration {
   stepDefinitions?: string | string[];
   messages?: {
     enabled: boolean;
@@ -334,6 +359,11 @@ export interface IUserConfiguration {
   };
   filterSpecs?: boolean;
   omitFiltered?: boolean;
+}
+
+export interface IUserConfiguration extends IBaseUserConfiguration {
+  e2e?: IBaseUserConfiguration;
+  component?: IBaseUserConfiguration;
 }
 
 export interface IPreprocessorConfiguration {
@@ -444,23 +474,10 @@ export async function resolve(
 
   debug(`resolved environment overrides ${util.inspect(environmentOverrides)}`);
 
-  let explicitConfiguration: Partial<IUserConfiguration>;
+  let explicitConfiguration: IUserConfiguration;
 
   if (result) {
-    if (typeof result !== "object" || result == null) {
-      throw new Error(
-        `Malformed configuration, expected an object, but got ${util.inspect(
-          result
-        )}`
-      );
-    }
-
-    explicitConfiguration = Object.assign(
-      {},
-      ...Object.entries(result).map((entry) =>
-        validateUserConfigurationEntry(...entry)
-      )
-    );
+    explicitConfiguration = validateUserConfiguration(result);
 
     debug(
       `resolved explicit user configuration ${util.inspect(
