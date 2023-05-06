@@ -27,6 +27,22 @@ The preprocessor uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig
 }
 ```
 
+## Type-specific configuration
+
+Configuration values for specific types of testing (e2e / component) can be configured using respective blocks, like shown below.
+
+```
+// .cypress-cucumber-preprocessorrc.json
+{
+  "e2e": {
+    "stepDefintions": "cypress/e2e/[filepath].{js,mjs,ts,tsx}"
+  },
+  "ct": {
+    "stepDefintions": "src/[filepath].{js,mjs,ts,tsx}"
+  }
+}
+```
+
 ## Caveats / Debugging
 
 Notice that configuration, when `package.json` is used, **must** be placed within the `"cypress-cucumber-preprocessor": { .. }` block. This does not apply if EG. `.cypress-cucumber-preprocessorrc.json` is used, as this is a file solely dedicated to preprocessor configuration, while `package.json` is not.

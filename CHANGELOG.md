@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Add support for (testing) type-specific configuration, fixes [#700](https://github.com/badeball/cypress-cucumber-preprocessor/issues/700).
+
 ## v17.0.0
 
 Breaking changes:
