@@ -2,7 +2,7 @@ import { After, Before, formatterHelpers } from "@cucumber/cucumber";
 import path from "path";
 import assert from "assert";
 import { promises as fs } from "fs";
-import { isPost10, writeFile } from "./helpers";
+import { writeFile } from "./helpers";
 
 const projectPath = path.join(__dirname, "..", "..");
 
@@ -22,10 +22,9 @@ Before(async function ({ gherkinDocument, pickle }) {
 
   await writeFile(path.join(this.tmpDir, "cypress", "support", "e2e.js"), "");
 
-  if (isPost10()) {
-    await writeFile(
-      path.join(this.tmpDir, "cypress.config.js"),
-      `
+  await writeFile(
+    path.join(this.tmpDir, "cypress.config.js"),
+    `
         const { defineConfig } = require("cypress");
         const setupNodeEvents = require("./setupNodeEvents.js");
   
@@ -37,23 +36,7 @@ Before(async function ({ gherkinDocument, pickle }) {
           }
         })
       `
-    );
-  } else {
-    await writeFile(
-      path.join(this.tmpDir, "cypress.json"),
-      JSON.stringify(
-        {
-          testFiles: "**/*.feature",
-          integrationFolder: "cypress/e2e",
-          supportFile: "cypress/support/e2e.js",
-          video: false,
-          nodeVersion: "system",
-        },
-        null,
-        2
-      )
-    );
-  }
+  );
 
   await fs.mkdir(path.join(this.tmpDir, "node_modules", "@badeball"), {
     recursive: true,
@@ -79,10 +62,9 @@ Before({ tags: "not @no-default-preprocessor-config" }, async function () {
 });
 
 Before({ tags: "not @no-default-plugin" }, async function () {
-  if (isPost10()) {
-    await writeFile(
-      path.join(this.tmpDir, "setupNodeEvents.js"),
-      `
+  await writeFile(
+    path.join(this.tmpDir, "setupNodeEvents.js"),
+    `
         const { addCucumberPreprocessorPlugin } = require("@badeball/cypress-cucumber-preprocessor");
         const { createEsbuildPlugin } = require("@badeball/cypress-cucumber-preprocessor/esbuild");
         const createBundler = require("@bahmutov/cypress-esbuild-preprocessor");
@@ -100,30 +82,7 @@ Before({ tags: "not @no-default-plugin" }, async function () {
           return config;
         };
       `
-    );
-  } else {
-    await writeFile(
-      path.join(this.tmpDir, "cypress", "plugins", "index.js"),
-      `
-        const { addCucumberPreprocessorPlugin } = require("@badeball/cypress-cucumber-preprocessor");
-        const { createEsbuildPlugin } = require("@badeball/cypress-cucumber-preprocessor/esbuild");
-        const createBundler = require("@bahmutov/cypress-esbuild-preprocessor");
-
-        module.exports = async (on, config) => {
-          await addCucumberPreprocessorPlugin(on, config);
-
-          on(
-            "file:preprocessor",
-            createBundler({
-              plugins: [createEsbuildPlugin(config)]
-            })
-          );
-
-          return config;
-        }
-      `
-    );
-  }
+  );
 });
 
 After(function () {

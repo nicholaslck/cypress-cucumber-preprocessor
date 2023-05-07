@@ -1,12 +1,6 @@
 Feature: mixing feature and non-feature specs
   Background:
-    Given if pre-v10, additional Cypress configuration
-      """
-      {
-        "testFiles": "**/*.{spec.js,feature}"
-      }
-      """
-    And if post-v10, additional Cypress configuration
+    Given additional Cypress configuration
       """
       {
         "e2e": {

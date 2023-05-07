@@ -26,7 +26,7 @@ Feature: overriding event handlers
         throw "some error"
       })
       """
-    And a file named "cypress/plugins/index.js" or "setupNodeEvents.js" (depending on Cypress era) with:
+    And a file named "setupNodeEvents.js" with:
       """
       const { addCucumberPreprocessorPlugin, afterScreenshotHandler } = require("@badeball/cypress-cucumber-preprocessor");
       const { createEsbuildPlugin } = require("@badeball/cypress-cucumber-preprocessor/esbuild");

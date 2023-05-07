@@ -7,7 +7,7 @@ Feature: esbuild + typescript
         Scenario: a scenario name
           Given a step
       """
-    And a file named "cypress/plugins/index.js" or "setupNodeEvents.js" (depending on Cypress era) with:
+    And a file named "setupNodeEvents.js" with:
       """
       const createBundler = require("@bahmutov/cypress-esbuild-preprocessor");
       const { addCucumberPreprocessorPlugin } = require("@badeball/cypress-cucumber-preprocessor");
