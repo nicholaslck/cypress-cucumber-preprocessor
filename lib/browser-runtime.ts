@@ -57,10 +57,7 @@ import { indent, stripIndent } from "./helpers/strings";
 
 import { generateSnippet } from "./helpers/snippets";
 
-import {
-  runStepWithLogGroup,
-  runStepWithLogGroupAndCompanionTable,
-} from "./helpers/cypress";
+import { runStepWithLogGroup } from "./helpers/cypress";
 
 import { getTags } from "./helpers/environment";
 
@@ -438,39 +435,20 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
         })
           .then((start) => {
             try {
-              if (pickleStep.argument?.dataTable) {
-                return runStepWithLogGroupAndCompanionTable(
-                  {
-                    keyword: assertAndReturn(
-                      "keyword" in scenarioStep && scenarioStep.keyword,
-                      "Expected to find a keyword in the scenario step"
-                    ),
-                    text,
-                    fn: () =>
-                      registry.runStepDefininition(this, text, argument),
-                  },
-                  argument as DataTable
-                ).then((result) => {
-                  return {
-                    start,
-                    result,
-                  };
-                });
-              } else {
-                return runStepWithLogGroup({
-                  keyword: assertAndReturn(
-                    "keyword" in scenarioStep && scenarioStep.keyword,
-                    "Expected to find a keyword in the scenario step"
-                  ),
-                  text,
-                  fn: () => registry.runStepDefininition(this, text, argument),
-                }).then((result) => {
-                  return {
-                    start,
-                    result,
-                  };
-                });
-              }
+              return runStepWithLogGroup({
+                keyword: assertAndReturn(
+                  "keyword" in scenarioStep && scenarioStep.keyword,
+                  "Expected to find a keyword in the scenario step"
+                ),
+                argument,
+                text,
+                fn: () => registry.runStepDefininition(this, text, argument),
+              }).then((result) => {
+                return {
+                  start,
+                  result,
+                };
+              });
             } catch (e) {
               if (e instanceof MissingDefinitionError) {
                 throw new Error(

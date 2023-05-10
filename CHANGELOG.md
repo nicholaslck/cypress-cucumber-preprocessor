@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - Add support for component testing using Vite as bundler, fixes [#698](https://github.com/badeball/cypress-cucumber-preprocessor/issues/698).
 
+- Output data tables in command log, fixes [#782](https://github.com/badeball/cypress-cucumber-preprocessor/issues/782) (by @nilgaar).
+
 ## v17.0.0
 
 Breaking changes:
