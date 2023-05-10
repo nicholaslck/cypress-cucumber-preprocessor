@@ -16,6 +16,6 @@ The examples illustrates using each bundler in each language flavor.
 
 Only a single example illustrating component testing exist so far.
 
-|                 | CJS                    | ESM                    | TS                    |
-|-----------------|------------------------|------------------------|-----------------------|
-| React + Webpack |                        |                        | [Link](ct-react-ts)   |
+|                 | CJS                    | ESM                    | TS                          |
+|-----------------|------------------------|------------------------|-----------------------------|
+| React + Webpack |                        |                        | [Link](ct-webpack-react-ts) |
