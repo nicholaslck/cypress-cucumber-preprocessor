@@ -1,6 +1,6 @@
 import { Given, Then } from "@badeball/cypress-cucumber-preprocessor";
 
-import { mount } from 'cypress/react'
+import { mount } from "cypress/react18"
 
 import App from "../../src/App";
 

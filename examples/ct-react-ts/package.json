@@ -3,8 +3,8 @@
     "@badeball/cypress-cucumber-preprocessor": "latest",
     "@cypress/webpack-dev-server": "latest",
     "cypress": "latest",
-    "react": "17",
-    "react-dom": "17",
+    "react": "latest",
+    "react-dom": "latest",
     "react-scripts": "latest",
     "ts-loader": "latest"
   },
