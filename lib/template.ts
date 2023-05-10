@@ -131,7 +131,7 @@ export async function compile(
 
   const createTestsPath = prepareLibPath("browser-runtime");
 
-  const registryPath = prepareLibPath("registry");
+  const prepareRegistryPath = prepareLibPath("helpers", "prepare-registry");
 
   const ensureRelativeToProjectRoot = (path: string) =>
     ensureIsRelative(configuration.projectRoot, path);
@@ -152,17 +152,13 @@ export async function compile(
   ];
 
   return `
+    const { getAndFreeRegistry } = require(${prepareRegistryPath});
     const { default: createTests } = require(${createTestsPath});
-    const { withRegistry } = require(${registryPath});
+    ${stepDefinitionPaths
+      .map((stepDefintion) => `require(${stringify(stepDefintion)});`)
+      .join("\n    ")}
 
-    const registry = withRegistry(
-      false,
-      () => {
-        ${stepDefinitionPaths
-          .map((stepDefintion) => `require(${stringify(stepDefintion)});`)
-          .join("\n    ")}
-      }
-    );
+    const registry = getAndFreeRegistry();
 
     registry.finalize();
 

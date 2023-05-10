@@ -93,6 +93,7 @@
     "pngjs": "^7.0.0",
     "prettier": "^2.8.8",
     "recast": "^0.22.0",
+    "rollup": "^3.21.5",
     "stream-buffers": "^3.0.2",
     "strip-ansi": "^6.0.1",
     "strip-indent": "^3.0.0",
