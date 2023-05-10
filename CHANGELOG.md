@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 - Add support for (testing) type-specific configuration, fixes [#700](https://github.com/badeball/cypress-cucumber-preprocessor/issues/700).
 
+- Add support for component testing using Vite as bundler, fixes [#698](https://github.com/badeball/cypress-cucumber-preprocessor/issues/698).
+
 ## v17.0.0
 
 Breaking changes:
