@@ -8,7 +8,7 @@ import {
 
 import parse from "@cucumber/tag-expressions";
 
-import { v4 as uuid } from "uuid";
+import { IdGenerator } from "@cucumber/messages";
 
 import { assertAndReturn } from "./helpers/assertions";
 
@@ -56,9 +56,8 @@ function parseHookArguments(
   fn: IHookBody,
   keyword: HookKeyword,
   position?: Position
-): IHook {
+): Omit<IHook, "id"> {
   return {
-    id: uuid(),
     tags: options.tags,
     node: options.tags ? parse(options.tags) : noopNode,
     implementation: fn,
@@ -78,6 +77,8 @@ export class Registry {
 
   public stepDefinitions: IStepDefinition<unknown[], Mocha.Context>[] = [];
 
+  private preliminaryHooks: Omit<IHook, "id">[] = [];
+
   public hooks: IHook[] = [];
 
   constructor(private experimentalSourceMap: boolean) {
@@ -90,12 +91,12 @@ export class Registry {
     this.parameterTypeRegistry = new ParameterTypeRegistry();
   }
 
-  public finalize() {
+  public finalize(newId: IdGenerator.NewId) {
     for (const { description, implementation, position } of this
       .preliminaryStepDefinitions) {
       if (typeof description === "string") {
         this.stepDefinitions.push({
-          id: uuid(),
+          id: newId(),
           expression: new CucumberExpression(
             description,
             this.parameterTypeRegistry
@@ -105,7 +106,7 @@ export class Registry {
         });
       } else {
         this.stepDefinitions.push({
-          id: uuid(),
+          id: newId(),
           expression: new RegularExpression(
             description,
             this.parameterTypeRegistry
@@ -114,6 +115,13 @@ export class Registry {
           position,
         });
       }
+    }
+
+    for (const preliminaryHook of this.preliminaryHooks) {
+      this.hooks.push({
+        id: newId(),
+        ...preliminaryHook,
+      });
     }
   }
 
@@ -144,7 +152,7 @@ export class Registry {
     options: { tags?: string },
     fn: IHookBody
   ) {
-    this.hooks.push(
+    this.preliminaryHooks.push(
       parseHookArguments(
         options,
         fn,

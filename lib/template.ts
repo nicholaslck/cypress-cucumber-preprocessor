@@ -137,6 +137,7 @@ export async function compile(
     ensureIsRelative(configuration.projectRoot, path);
 
   const createTestsOptions: CreateTestsOptions = [
+    new Date().getTime(),
     data,
     gherkinDocument,
     pickles,
@@ -159,8 +160,6 @@ export async function compile(
       .join("\n    ")}
 
     const registry = getAndFreeRegistry();
-
-    registry.finalize();
 
     createTests(registry, ...${stringify(createTestsOptions)});
   `;

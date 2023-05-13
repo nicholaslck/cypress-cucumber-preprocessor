@@ -10,6 +10,8 @@ import {
 
 import { v4 as uuid } from "uuid";
 
+import random from "seedrandom";
+
 import { assertAndReturn, fail } from "./helpers/assertions";
 
 import DataTable from "./data_table";
@@ -65,6 +67,7 @@ type Node = ReturnType<typeof parse>;
 
 interface CompositionContext {
   registry: Registry;
+  newId: messages.IdGenerator.NewId;
   gherkinDocument: messages.GherkinDocument;
   astIdsMap: ReturnType<typeof createAstIdMap>;
   pickles: messages.Pickle[];
@@ -306,7 +309,7 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
 
   const internalProperties: InternalSpecProperties = {
     pickle,
-    testCaseStartedId: uuid(),
+    testCaseStartedId: context.newId(),
     allSteps: steps,
     remainingSteps: [...steps],
   };
@@ -718,13 +721,14 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
    * Repopulate internal properties in case previous test is retried.
    */
   updateInternalSpecProperties({
-    testCaseStartedId: uuid(),
+    testCaseStartedId: context.newId(),
     remainingSteps: [...properties.allSteps],
   });
 }
 
 export default function createTests(
   registry: Registry,
+  seed: number,
   source: string,
   gherkinDocument: messages.GherkinDocument,
   pickles: messages.Pickle[],
@@ -736,6 +740,15 @@ export default function createTests(
     stepDefinitionPaths: string[];
   }
 ) {
+  const prng = random(seed.toString());
+
+  const newId: messages.IdGenerator.NewId = () =>
+    uuid({
+      random: Array.from({ length: 16 }, () => Math.floor(prng() * 256)),
+    });
+
+  registry.finalize(newId);
+
   const stepDefinitions: messages.StepDefinition[] =
     registry.stepDefinitions.map((stepDefinition) => {
       const type: messages.StepDefinitionPatternType =
@@ -839,6 +852,7 @@ export default function createTests(
 
   const context: CompositionContext = {
     registry,
+    newId,
     gherkinDocument,
     astIdsMap: createAstIdMap(gherkinDocument),
     pickles,

@@ -132,6 +132,8 @@ export async function diagnose(configuration: {
 
     let registry: Registry;
 
+    const newId = IdGenerator.uuid();
+
     try {
       await fs.writeFile(
         inputFileName,
@@ -173,7 +175,7 @@ export async function diagnose(configuration: {
         }
       });
 
-      registry.finalize();
+      registry.finalize(newId);
 
       const consumer = await new sourceMap.SourceMapConsumer(
         (await fs.readFile(outputFileName + ".map")).toString()
@@ -214,7 +216,7 @@ export async function diagnose(configuration: {
       includeSource: false,
       includeGherkinDocument: true,
       includePickles: true,
-      newId: IdGenerator.uuid(),
+      newId,
     };
 
     const relativeUri = ensureIsRelative(
