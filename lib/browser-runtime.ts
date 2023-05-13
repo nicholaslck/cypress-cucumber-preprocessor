@@ -297,7 +297,7 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
     ...afterHooks.map((hook) => ({ hook })),
   ];
 
-  if (!testFilter.evaluate(tags) || tags.includes("@skip")) {
+  if (shouldSkipPickle(testFilter, pickle)) {
     if (!context.omitFiltered) {
       it.skip(scenarioName);
     }
@@ -565,6 +565,12 @@ function createTestFilter(
   }
 }
 
+function shouldSkipPickle(testFilter: Node, pickle: messages.Pickle) {
+  const tags = collectTagNames(pickle.tags);
+
+  return !testFilter.evaluate(tags) || tags.includes("@skip");
+}
+
 function beforeHandler(context: CompositionContext) {
   if (!retrieveInternalSuiteProperties()?.isEventHandlersAttached) {
     fail(
@@ -749,6 +755,8 @@ export default function createTests(
 
   registry.finalize(newId);
 
+  const testFilter = createTestFilter(gherkinDocument, Cypress.env());
+
   const stepDefinitions: messages.StepDefinition[] =
     registry.stepDefinitions.map((stepDefinition) => {
       const type: messages.StepDefinitionPatternType =
@@ -766,42 +774,46 @@ export default function createTests(
       };
     });
 
-  const testCases: messages.TestCase[] = pickles.map((pickle) => {
-    const tags = collectTagNames(pickle.tags);
-    const beforeHooks = registry.resolveBeforeHooks(tags);
-    const afterHooks = registry.resolveAfterHooks(tags);
+  const testCases: messages.TestCase[] = pickles
+    .filter((pickle) => {
+      return !omitFiltered || !shouldSkipPickle(testFilter, pickle);
+    })
+    .map((pickle) => {
+      const tags = collectTagNames(pickle.tags);
+      const beforeHooks = registry.resolveBeforeHooks(tags);
+      const afterHooks = registry.resolveAfterHooks(tags);
 
-    const hooksToStep = (hook: IHook): messages.TestStep => {
-      return {
-        id: hook.id,
-        hookId: hook.id,
+      const hooksToStep = (hook: IHook): messages.TestStep => {
+        return {
+          id: hook.id,
+          hookId: hook.id,
+        };
       };
-    };
 
-    const pickleStepToTestStep = (
-      pickleStep: messages.PickleStep
-    ): messages.TestStep => {
-      const stepDefinitionIds = registry
-        .getMatchingStepDefinitions(pickleStep.text)
-        .map((stepDefinition) => stepDefinition.id);
+      const pickleStepToTestStep = (
+        pickleStep: messages.PickleStep
+      ): messages.TestStep => {
+        const stepDefinitionIds = registry
+          .getMatchingStepDefinitions(pickleStep.text)
+          .map((stepDefinition) => stepDefinition.id);
+
+        return {
+          id: pickleStep.id,
+          pickleStepId: pickleStep.id,
+          stepDefinitionIds,
+        };
+      };
 
       return {
-        id: pickleStep.id,
-        pickleStepId: pickleStep.id,
-        stepDefinitionIds,
+        id: pickle.id,
+        pickleId: pickle.id,
+        testSteps: [
+          ...beforeHooks.map(hooksToStep),
+          ...pickle.steps.map(pickleStepToTestStep),
+          ...afterHooks.map(hooksToStep),
+        ],
       };
-    };
-
-    return {
-      id: pickle.id,
-      pickleId: pickle.id,
-      testSteps: [
-        ...beforeHooks.map(hooksToStep),
-        ...pickle.steps.map(pickleStepToTestStep),
-        ...afterHooks.map(hooksToStep),
-      ],
-    };
-  });
+    });
 
   const specEnvelopes: messages.Envelope[] = [];
 
@@ -847,8 +859,6 @@ export default function createTests(
       testCase,
     });
   }
-
-  const testFilter = createTestFilter(gherkinDocument, Cypress.env());
 
   const context: CompositionContext = {
     registry,

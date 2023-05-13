@@ -22,22 +22,47 @@ Then("the report should display when last run", async function () {
     { runScripts: "dangerously" }
   );
 
-  const dt = Array.from(dom.window.document.querySelectorAll("dt")).find(
-    (el) => el.textContent === "last run"
+  const dt = assertAndReturn(
+    Array.from(dom.window.document.querySelectorAll("dt")).find(
+      (el) => el.textContent === "last run"
+    ),
+    "Expected to find a 'last run' dt"
   );
 
-  assert(dt, "Expected to find a 'last run' dt");
+  const dd = assertAndReturn(
+    dt.parentElement?.querySelector("dd"),
+    "Expected to find a 'last run' dt's dd"
+  );
 
-  const dd = dt.parentElement?.querySelector("dd");
-
-  assert(dd, "Expected to find a 'last run' dt's dd");
-
-  const lastRunText = dd.textContent;
-
-  assert(lastRunText, "Expected to find 'XX seconds ago'");
+  const lastRunText = assertAndReturn(
+    dd.textContent,
+    "Expected to find 'XX seconds ago'"
+  );
 
   assert.match(lastRunText, /\d+ seconds? ago/);
 });
+
+Then(
+  "the HTML should display {int} executed scenario(s)",
+  async function (n: number) {
+    const dom = await JSDOM.fromFile(
+      path.join(this.tmpDir, "cucumber-report.html"),
+      { runScripts: "dangerously" }
+    );
+
+    const dt = assertAndReturn(
+      Array.from(dom.window.document.querySelectorAll("dt")).find(
+        (el) => el.textContent && /\d+ executed/.test(el.textContent)
+      ),
+      "Expected to find a 'XX executed' dt"
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const actual = parseInt(dt.textContent!, 10);
+
+    assert.equal(actual, n);
+  }
+);
 
 Then("the report should have an image attachment", async function () {
   const dom = await JSDOM.fromFile(
