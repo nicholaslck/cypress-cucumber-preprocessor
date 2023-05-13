@@ -814,7 +814,7 @@ export default function createTests(
     });
   }
 
-  for (const hook of [...registry.beforeHooks, ...registry.afterHooks]) {
+  for (const hook of registry.hooks) {
     specEnvelopes.push({
       hook: {
         id: hook.id,

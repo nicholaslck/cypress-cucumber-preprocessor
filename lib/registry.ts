@@ -78,9 +78,7 @@ export class Registry {
 
   public stepDefinitions: IStepDefinition<unknown[], Mocha.Context>[] = [];
 
-  public beforeHooks: IHook[] = [];
-
-  public afterHooks: IHook[] = [];
+  public hooks: IHook[] = [];
 
   constructor(private experimentalSourceMap: boolean) {
     this.defineStep = this.defineStep.bind(this);
@@ -141,26 +139,27 @@ export class Registry {
     );
   }
 
-  public defineBefore(options: { tags?: string }, fn: IHookBody) {
-    this.beforeHooks.push(
+  public defineHook(
+    keyword: HookKeyword,
+    options: { tags?: string },
+    fn: IHookBody
+  ) {
+    this.hooks.push(
       parseHookArguments(
         options,
         fn,
-        "Before",
+        keyword,
         maybeRetrievePositionFromSourceMap(this.experimentalSourceMap)
       )
     );
   }
 
+  public defineBefore(options: { tags?: string }, fn: IHookBody) {
+    this.defineHook("Before", options, fn);
+  }
+
   public defineAfter(options: { tags?: string }, fn: IHookBody) {
-    this.afterHooks.push(
-      parseHookArguments(
-        options,
-        fn,
-        "After",
-        maybeRetrievePositionFromSourceMap(this.experimentalSourceMap)
-      )
-    );
+    this.defineHook("After", options, fn);
   }
 
   public getMatchingStepDefinitions(text: string) {
@@ -220,16 +219,18 @@ export class Registry {
     return stepDefinition.implementation.apply(world, args);
   }
 
-  public resolveBeforeHooks(tags: string[]) {
-    return this.beforeHooks.filter((beforeHook) =>
-      beforeHook.node.evaluate(tags)
+  public resolveHooks(keyword: HookKeyword, tags: string[]) {
+    return this.hooks.filter(
+      (hook) => hook.keyword === keyword && hook.node.evaluate(tags)
     );
   }
 
+  public resolveBeforeHooks(tags: string[]) {
+    return this.resolveHooks("Before", tags);
+  }
+
   public resolveAfterHooks(tags: string[]) {
-    return this.afterHooks.filter((beforeHook) =>
-      beforeHook.node.evaluate(tags)
-    );
+    return this.resolveHooks("After", tags);
   }
 
   public runHook(world: Mocha.Context, hook: IHook) {
