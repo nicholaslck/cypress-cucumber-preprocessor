@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v17.1.1
 
 - Allow generation of JSON reports with hooks (After / Before) even if `baseUrl` is undefined, fixes [#1017](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1017).
 
