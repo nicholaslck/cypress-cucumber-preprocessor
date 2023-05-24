@@ -13,7 +13,10 @@
 * [Localisation](localisation.md)
 * [Configuration](configuration.md)
 * [Test configuration](test-configuration.md)
-* [Diagnostics / dry run](diagnostics.md)
+* CLI utilities
+  * [Diagnostics / dry run](diagnostics.md)
+  * [JSON formatter](json-formatter.md)
+  * [HTML formatter](html-formatter.md)
 * [Mixing Cucumber and non-Cucumber specs](mixing-types.md)
 * [:warning: On event handlers](event-handlers.md)
 * [Frequently asked questions](faq.md)

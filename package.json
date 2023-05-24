@@ -14,7 +14,9 @@
     "cypress-preprocessor"
   ],
   "bin": {
-    "cypress-cucumber-diagnostics": "dist/diagnostics/index.js"
+    "cypress-cucumber-diagnostics": "dist/bin/diagnostics.js",
+    "cucumber-html-formatter": "dist/bin/cucumber-html-formatter.js",
+    "cucumber-json-formatter": "dist/bin/cucumber-json-formatter.js"
   },
   "main": "dist/entrypoint-node.js",
   "types": "dist/entrypoint-node.d.ts",

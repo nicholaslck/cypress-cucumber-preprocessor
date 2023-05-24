@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { inspect } from "util";
 import path from "path";
 import {
@@ -377,11 +375,5 @@ export async function execute(options: {
         append("No problems found.");
       }
     })
-  );
-}
-
-if (require.main === module) {
-  execute({ argv: process.argv, env: process.env, cwd: process.cwd() }).catch(
-    console.error
   );
 }
