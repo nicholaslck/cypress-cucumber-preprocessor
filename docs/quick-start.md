@@ -44,6 +44,30 @@ The example above illustrates how to use the preprocessor together with Esbuild,
 
 Read more about the preprocessor's configuration options at [docs/configuration.md](configuration.md).
 
+# Note for TypeScript users
+
+The package utilizes [Conditional Exports](https://nodejs.org/api/packages.html#conditional-exports) and you may have to set `moduleResolution` to `node16` in your `tsconfig.json` depending on what parts of the package you use, like shown below.
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "node16"
+  }
+}
+```
+
+TypeScript users that are unable to upgrade `moduleResolution` to `node16`, can use the `paths` property as a workaround, like shown below.
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/bundler-utils/*"]
+    }
+  }
+}
+```
+
 # Write a test
 
 Write Gherkin documents and add a file for type definitions with a corresponding name (read more about how step definitions are resolved in [docs/step-definitions.md](step-definitions.md)). Reading [docs/cucumber-basics.md](cucumber-basics.md) is highly recommended.
