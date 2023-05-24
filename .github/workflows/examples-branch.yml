@@ -70,6 +70,8 @@ jobs:
     strategy:
       matrix:
         example: ${{fromJson(needs.find-examples.outputs.matrix)}}
+    env:
+      NPM_CONFIG_PACKAGE_LOCK: "false"
     steps:
       - name: Update certificates
         run: |
