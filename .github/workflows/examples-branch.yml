@@ -106,12 +106,6 @@ jobs:
       - name: Install dirty build
         working-directory: examples/${{ matrix.example }}
         run: npm install badeball-*
-      - name: Debug
-        working-directory: examples/${{ matrix.example }}
-        run: ls -la
-      - name: Debug
-        working-directory: examples/${{ matrix.example }}
-        run: find node_modules/ -type f -name "*.feature"
       - name: Run Cypress
         working-directory: examples/${{ matrix.example }}
         run: |
