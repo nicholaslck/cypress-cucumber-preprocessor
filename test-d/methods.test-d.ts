@@ -10,6 +10,8 @@ import {
   defineParameterType,
   Before,
   After,
+  BeforeStep,
+  AfterStep,
   DataTable,
 } from "../lib/entrypoint-browser";
 
@@ -106,6 +108,108 @@ After({}, function () {
 After({ tags: "foo" }, function () {
   expectType<Mocha.Context>(this);
 });
+
+BeforeStep(function ({
+  pickle,
+  pickleStep,
+  gherkinDocument,
+  testCaseStartedId,
+  testStepId,
+}) {
+  expectType<Mocha.Context>(this);
+  expectType<messages.Pickle>(pickle);
+  expectType<messages.PickleStep>(pickleStep);
+  expectType<messages.GherkinDocument>(gherkinDocument);
+  expectType<string>(testCaseStartedId);
+  expectType<string>(testStepId);
+});
+
+BeforeStep(
+  {},
+  function ({
+    pickle,
+    pickleStep,
+    gherkinDocument,
+    testCaseStartedId,
+    testStepId,
+  }) {
+    expectType<Mocha.Context>(this);
+    expectType<messages.Pickle>(pickle);
+    expectType<messages.PickleStep>(pickleStep);
+    expectType<messages.GherkinDocument>(gherkinDocument);
+    expectType<string>(testCaseStartedId);
+    expectType<string>(testStepId);
+  }
+);
+
+BeforeStep(
+  { tags: "foo" },
+  function ({
+    pickle,
+    pickleStep,
+    gherkinDocument,
+    testCaseStartedId,
+    testStepId,
+  }) {
+    expectType<Mocha.Context>(this);
+    expectType<messages.Pickle>(pickle);
+    expectType<messages.PickleStep>(pickleStep);
+    expectType<messages.GherkinDocument>(gherkinDocument);
+    expectType<string>(testCaseStartedId);
+    expectType<string>(testStepId);
+  }
+);
+
+AfterStep(function ({
+  pickle,
+  pickleStep,
+  gherkinDocument,
+  testCaseStartedId,
+  testStepId,
+}) {
+  expectType<Mocha.Context>(this);
+  expectType<messages.Pickle>(pickle);
+  expectType<messages.PickleStep>(pickleStep);
+  expectType<messages.GherkinDocument>(gherkinDocument);
+  expectType<string>(testCaseStartedId);
+  expectType<string>(testStepId);
+});
+
+AfterStep(
+  {},
+  function ({
+    pickle,
+    pickleStep,
+    gherkinDocument,
+    testCaseStartedId,
+    testStepId,
+  }) {
+    expectType<Mocha.Context>(this);
+    expectType<messages.Pickle>(pickle);
+    expectType<messages.PickleStep>(pickleStep);
+    expectType<messages.GherkinDocument>(gherkinDocument);
+    expectType<string>(testCaseStartedId);
+    expectType<string>(testStepId);
+  }
+);
+
+AfterStep(
+  { tags: "foo" },
+  function ({
+    pickle,
+    pickleStep,
+    gherkinDocument,
+    testCaseStartedId,
+    testStepId,
+  }) {
+    expectType<Mocha.Context>(this);
+    expectType<messages.Pickle>(pickle);
+    expectType<messages.PickleStep>(pickleStep);
+    expectType<messages.GherkinDocument>(gherkinDocument);
+    expectType<string>(testCaseStartedId);
+    expectType<string>(testStepId);
+  }
+);
 
 expectType<messages.GherkinDocument>(window.testState.gherkinDocument);
 expectType<messages.Pickle[]>(window.testState.pickles);

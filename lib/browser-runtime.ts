@@ -63,6 +63,8 @@ import { runStepWithLogGroup } from "./helpers/cypress";
 
 import { getTags } from "./helpers/environment";
 
+import { IStepHookParameter } from "./public-member-types";
+
 type Node = ReturnType<typeof parse>;
 
 interface CompositionContext {
@@ -437,6 +439,16 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
           return cy.wrap(start, { log: false });
         })
           .then((start) => {
+            const beforeStepHooks = registry.resolveBeforeStepHooks(tags);
+            const afterStepHooks = registry.resolveAfterStepHooks(tags);
+            const options: IStepHookParameter = {
+              pickle,
+              pickleStep,
+              gherkinDocument,
+              testCaseStartedId,
+              testStepId: pickleStep.id,
+            };
+
             try {
               return runStepWithLogGroup({
                 keyword: assertAndReturn(
@@ -445,7 +457,23 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
                 ),
                 argument,
                 text,
-                fn: () => registry.runStepDefininition(this, text, argument),
+                fn: () => {
+                  for (const beforeStepHook of beforeStepHooks) {
+                    registry.runStepHook(this, beforeStepHook, options);
+                  }
+
+                  const result = registry.runStepDefininition(
+                    this,
+                    text,
+                    argument
+                  );
+
+                  for (const afterStepHook of afterStepHooks.reverse()) {
+                    registry.runStepHook(this, afterStepHook, options);
+                  }
+
+                  return result;
+                },
               }).then((result) => {
                 return {
                   start,

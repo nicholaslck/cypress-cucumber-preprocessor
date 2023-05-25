@@ -101,7 +101,7 @@ When("I fill in the entire form", function () {
 });
 ```
 
-# Hooks
+# Scenario hooks
 
 `Before()` and `After()` is similar to Cypress' `beforeEach()` and `afterEach()`, but they can be selected to conditionally run based on the tags of each scenario, as shown below. Furthermore, failure in these hooks does **not** result in remaining tests being skipped. This is contrary to Cypress' `beforeEach` and `afterEach`.
 
@@ -125,6 +125,37 @@ Before({ tags: "@foo and @bar" }, function () {
 
 Before({ tags: "@foo or @bar" }, function () {
   // This hook will be executed before scenarios tagged with @foo or @bar.
+});
+```
+
+# Step hooks
+
+`BeforeStep()` and `AfterStep()` are hooks invoked before and after each step, respectively. These too can be selected to conditionally run based on the tags of each scenario, as shown below.
+
+> **Note**  
+> Contrary to how cucumber-js works, these `AfterStep()` hooks **does not** run if your step fails[^1].
+
+```ts
+import { BeforeStep } from "@badeball/cypress-cucumber-preprocessor";
+
+BeforeStep(function (options) {
+  // This hook will be executed before all steps.
+});
+
+BeforeStep({ tags: "@foo" }, function () {
+  // This hook will be executed before steps in scenarios tagged with @foo.
+});
+
+BeforeStep({ tags: "@foo and @bar" }, function () {
+  // This hook will be executed before steps in scenarios tagged with @foo and @bar.
+});
+
+BeforeStep({ tags: "@foo or @bar" }, function () {
+  // This hook will be executed before steps in scenarios tagged with @foo or @bar.
+});
+
+BeforeStep(function ({ pickle, pickleStep, gherkinDocument, result, testCaseStartedId, testStepId }) {
+  // Step hooks are invoked with an object containing a bunch of relevant data.
 });
 ```
 

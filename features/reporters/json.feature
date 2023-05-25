@@ -232,6 +232,57 @@ Feature: JSON formatter
       Then it fails
       And there should be a JSON output similar to "fixtures/failing-after.json"
 
+  Rule: step hooks affects the result of the current step
+    Background:
+      Given additional Cypress configuration
+        """
+        {
+          "screenshotOnRunFailure": false
+        }
+        """
+
+    Scenario: failing BeforeStep
+      Given a file named "cypress/e2e/a.feature" with:
+        """
+        Feature: a feature
+          Scenario: a scenario
+            Given a failing step
+            And another step
+        """
+      And a file named "cypress/support/step_definitions/steps.js" with:
+        """
+        const { BeforeStep, Given } = require("@badeball/cypress-cucumber-preprocessor");
+        BeforeStep(function() {
+          throw "some error"
+        })
+        Given("a failing step", function() {})
+        Given("another step", function () {})
+        """
+      When I run cypress
+      Then it fails
+      And there should be a JSON output similar to "fixtures/failing-step.json"
+
+    Scenario: failing AfterStep
+      Given a file named "cypress/e2e/a.feature" with:
+        """
+        Feature: a feature
+          Scenario: a scenario
+            Given a failing step
+            And another step
+        """
+      And a file named "cypress/support/step_definitions/steps.js" with:
+        """
+        const { AfterStep, Given } = require("@badeball/cypress-cucumber-preprocessor");
+        AfterStep(function() {
+          throw "some error"
+        })
+        Given("a failing step", function() {})
+        Given("another step", function () {})
+        """
+      When I run cypress
+      Then it fails
+      And there should be a JSON output similar to "fixtures/failing-step.json"
+
   Rule: it should contain screenshots captured during a test
     Scenario: explicit screenshot
       Given a file named "cypress/e2e/a.feature" with:

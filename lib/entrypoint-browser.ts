@@ -25,6 +25,7 @@ import { getRegistry } from "./registry";
 
 import {
   IHookBody,
+  IStepHookBody,
   IParameterTypeDefinition,
   IStepDefinitionBody,
 } from "./public-member-types";
@@ -79,6 +80,36 @@ function defineAfter(
     getRegistry().defineAfter({}, optionsOrFn);
   } else if (typeof optionsOrFn === "object" && typeof maybeFn === "function") {
     getRegistry().defineAfter(optionsOrFn, maybeFn);
+  } else {
+    throw new Error("Unexpected argument for After hook");
+  }
+}
+
+function defineBeforeStep(options: { tags?: string }, fn: IStepHookBody): void;
+function defineBeforeStep(fn: IStepHookBody): void;
+function defineBeforeStep(
+  optionsOrFn: IStepHookBody | { tags?: string },
+  maybeFn?: IStepHookBody
+) {
+  if (typeof optionsOrFn === "function") {
+    getRegistry().defineBeforeStep({}, optionsOrFn);
+  } else if (typeof optionsOrFn === "object" && typeof maybeFn === "function") {
+    getRegistry().defineBeforeStep(optionsOrFn, maybeFn);
+  } else {
+    throw new Error("Unexpected argument for Before hook");
+  }
+}
+
+function defineAfterStep(options: { tags?: string }, fn: IStepHookBody): void;
+function defineAfterStep(fn: IStepHookBody): void;
+function defineAfterStep(
+  optionsOrFn: IStepHookBody | { tags?: string },
+  maybeFn?: IStepHookBody
+) {
+  if (typeof optionsOrFn === "function") {
+    getRegistry().defineAfterStep({}, optionsOrFn);
+  } else if (typeof optionsOrFn === "object" && typeof maybeFn === "function") {
+    getRegistry().defineAfterStep(optionsOrFn, maybeFn);
   } else {
     throw new Error("Unexpected argument for After hook");
   }
@@ -161,4 +192,6 @@ export {
   defineParameterType,
   defineBefore as Before,
   defineAfter as After,
+  defineBeforeStep as BeforeStep,
+  defineAfterStep as AfterStep,
 };

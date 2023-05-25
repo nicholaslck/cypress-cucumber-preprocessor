@@ -1,3 +1,5 @@
+import * as messages from "@cucumber/messages";
+
 export interface IParameterTypeDefinition<T, C extends Mocha.Context> {
   name: string;
   regexp: RegExp;
@@ -6,6 +8,18 @@ export interface IParameterTypeDefinition<T, C extends Mocha.Context> {
 
 export interface IHookBody {
   (this: Mocha.Context): void;
+}
+
+export interface IStepHookParameter {
+  pickle: messages.Pickle;
+  pickleStep: messages.PickleStep;
+  gherkinDocument: messages.GherkinDocument;
+  testCaseStartedId: string;
+  testStepId: string;
+}
+
+export interface IStepHookBody {
+  (this: Mocha.Context, options: IStepHookParameter): void;
 }
 
 export interface IStepDefinitionBody<

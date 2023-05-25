@@ -2,6 +2,7 @@ import DataTable from "./data_table";
 
 import {
   IHookBody,
+  IStepHookBody,
   IParameterTypeDefinition,
   IStepDefinitionBody,
 } from "./public-member-types";
@@ -94,6 +95,28 @@ export function After(
   optionsOrFn: IHookBody | { tags?: string },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   maybeFn?: IHookBody
+) {
+  throw createUnimplemented();
+}
+
+export function BeforeStep(options: { tags?: string }, fn: IStepHookBody): void;
+export function BeforeStep(fn: IStepHookBody): void;
+export function BeforeStep(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  optionsOrFn: IStepHookBody | { tags?: string },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  maybeFn?: IStepHookBody
+) {
+  throw createUnimplemented();
+}
+
+export function AfterStep(options: { tags?: string }, fn: IStepHookBody): void;
+export function AfterStep(fn: IStepHookBody): void;
+export function AfterStep(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  optionsOrFn: IStepHookBody | { tags?: string },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  maybeFn?: IStepHookBody
 ) {
   throw createUnimplemented();
 }

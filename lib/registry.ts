@@ -18,6 +18,8 @@ import { CypressCucumberError } from "./helpers/error";
 
 import {
   IHookBody,
+  IStepHookBody,
+  IStepHookParameter,
   IParameterTypeDefinition,
   IStepDefinitionBody,
 } from "./public-member-types";
@@ -40,23 +42,28 @@ export class MultipleDefinitionsError extends CypressCucumberError {}
 
 export type HookKeyword = "Before" | "After";
 
-export interface IHook {
-  id: string;
+interface IBaseHook<IImplementation> {
   tags?: string;
   node: ReturnType<typeof parse>;
-  implementation: IHookBody;
+  implementation: IImplementation;
   keyword: HookKeyword;
   position?: Position;
 }
 
+export interface IHook extends IBaseHook<IHookBody> {
+  id: string;
+}
+
+export type IStepHook = IBaseHook<IStepHookBody>;
+
 const noopNode = { evaluate: () => true };
 
-function parseHookArguments(
+function parseHookArguments<T>(
   options: { tags?: string },
-  fn: IHookBody,
+  fn: T,
   keyword: HookKeyword,
   position?: Position
-): Omit<IHook, "id"> {
+): IBaseHook<T> {
   return {
     tags: options.tags,
     node: options.tags ? parse(options.tags) : noopNode,
@@ -80,6 +87,8 @@ export class Registry {
   private preliminaryHooks: Omit<IHook, "id">[] = [];
 
   public hooks: IHook[] = [];
+
+  public stepHooks: IStepHook[] = [];
 
   constructor(private experimentalSourceMap: boolean) {
     this.defineStep = this.defineStep.bind(this);
@@ -170,6 +179,29 @@ export class Registry {
     this.defineHook("After", options, fn);
   }
 
+  public defineStepHook(
+    keyword: HookKeyword,
+    options: { tags?: string },
+    fn: IStepHookBody
+  ) {
+    this.stepHooks.push(
+      parseHookArguments(
+        options,
+        fn,
+        keyword,
+        maybeRetrievePositionFromSourceMap(this.experimentalSourceMap)
+      )
+    );
+  }
+
+  public defineBeforeStep(options: { tags?: string }, fn: IStepHookBody) {
+    this.defineStepHook("Before", options, fn);
+  }
+
+  public defineAfterStep(options: { tags?: string }, fn: IStepHookBody) {
+    this.defineStepHook("After", options, fn);
+  }
+
   public getMatchingStepDefinitions(text: string) {
     return this.stepDefinitions.filter((stepDefinition) =>
       stepDefinition.expression.match(text)
@@ -243,6 +275,28 @@ export class Registry {
 
   public runHook(world: Mocha.Context, hook: IHook) {
     return hook.implementation.call(world);
+  }
+
+  public resolveStepHooks(keyword: HookKeyword, tags: string[]) {
+    return this.stepHooks.filter(
+      (hook) => hook.keyword === keyword && hook.node.evaluate(tags)
+    );
+  }
+
+  public resolveBeforeStepHooks(tags: string[]) {
+    return this.resolveStepHooks("Before", tags);
+  }
+
+  public resolveAfterStepHooks(tags: string[]) {
+    return this.resolveStepHooks("After", tags);
+  }
+
+  public runStepHook(
+    world: Mocha.Context,
+    hook: IStepHook,
+    options: IStepHookParameter
+  ) {
+    return hook.implementation.call(world, options);
   }
 }
 
