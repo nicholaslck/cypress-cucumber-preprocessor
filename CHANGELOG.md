@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 - Add BeforeStep and AfterStep hooks, fixes [#847](https://github.com/badeball/cypress-cucumber-preprocessor/issues/847).
 
+- Report failing steps with correct duration, fixes [#963](https://github.com/badeball/cypress-cucumber-preprocessor/issues/963).
+
 ## v17.1.1
 
 - Allow generation of JSON reports with hooks (After / Before) even if `baseUrl` is undefined, fixes [#1017](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1017).

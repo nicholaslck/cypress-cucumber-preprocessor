@@ -53,7 +53,7 @@ import { notNull } from "./helpers/type-guards";
 
 import { looksLikeOptions, tagToCypressOptions } from "./helpers/tag-parser";
 
-import { createTimestamp, duration } from "./helpers/messages";
+import { createTimestamp, duration, StrictTimestamp } from "./helpers/messages";
 
 import { indent, stripIndent } from "./helpers/strings";
 
@@ -97,6 +97,7 @@ interface IStep {
 export interface InternalSpecProperties {
   pickle: messages.Pickle;
   testCaseStartedId: string;
+  currentStepStartedAt?: StrictTimestamp;
   currentStep?: IStep;
   allSteps: IStep[];
   remainingSteps: IStep[];
@@ -360,6 +361,8 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
 
           const start = createTimestamp();
 
+          internalProperties.currentStepStartedAt = start;
+
           if (context.messagesEnabled) {
             taskTestStepStarted({
               testStepId: hook.id,
@@ -424,9 +427,10 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
         cy.then(() => {
           window.testState.pickleStep = step.pickleStep;
 
-          internalProperties.currentStep = { pickleStep };
-
           const start = createTimestamp();
+
+          internalProperties.currentStep = { pickleStep };
+          internalProperties.currentStepStartedAt = start;
 
           if (context.messagesEnabled) {
             taskTestStepStarted({
@@ -620,7 +624,8 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
 
   const properties = retrieveInternalSpecProperties();
 
-  const { testCaseStartedId, remainingSteps } = properties;
+  const { testCaseStartedId, currentStepStartedAt, remainingSteps } =
+    properties;
 
   if (context.messagesEnabled) {
     const endTimestamp = createTimestamp();
@@ -666,11 +671,13 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
                 testStepResult: {
                   status: messages.TestStepResultStatus.FAILED,
                   message: this.currentTest?.err?.message,
-                  // TODO: Create a proper duration from when the step started.
-                  duration: {
-                    seconds: 0,
-                    nanos: 0,
-                  },
+                  duration: duration(
+                    assertAndReturn(
+                      currentStepStartedAt,
+                      "Expected there to be a timestamp for current step"
+                    ),
+                    endTimestamp
+                  ),
                 },
                 timestamp: endTimestamp,
               };

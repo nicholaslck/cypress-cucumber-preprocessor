@@ -93,12 +93,21 @@ function ndJsonToString(ndjson: any) {
   return ndjson.map((o: any) => JSON.stringify(o)).join("\n") + "\n";
 }
 
-async function readMessagesReport(cwd: string): Promise<messages.Envelope[]> {
+async function readMessagesReport(
+  cwd: string,
+  options: { normalize: boolean } = { normalize: true }
+): Promise<messages.Envelope[]> {
   const absoluteMessagesPath = path.join(cwd, "cucumber-messages.ndjson");
 
   const content = await fs.readFile(absoluteMessagesPath);
 
-  return prepareMessagesReport(stringToNdJson(content.toString()));
+  const messages = stringToNdJson(content.toString());
+
+  if (options.normalize) {
+    return prepareMessagesReport(messages);
+  } else {
+    return messages;
+  }
 }
 
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
@@ -219,3 +228,41 @@ Then("the messages report shouldn't contain any specs", async function () {
     }
   }
 });
+
+Then(
+  "the message report should contain a non-zero duration of the step",
+  async function () {
+    const messages = await readMessagesReport(this.tmpDir, {
+      normalize: false,
+    });
+
+    type TestStepFinishedEnvelope = Pick<
+      Required<messages.Envelope>,
+      "testStepFinished"
+    >;
+
+    const isTestStepFinishedEnvelope = (
+      envelope: messages.Envelope
+    ): envelope is TestStepFinishedEnvelope => !!envelope.testStepFinished;
+
+    const testStepFinishedCol: TestStepFinishedEnvelope[] = messages.filter(
+      isTestStepFinishedEnvelope
+    );
+
+    if (testStepFinishedCol.length !== 1) {
+      throw new Error(
+        "Expected to find a single testStepFinished envelope, but found " +
+          testStepFinishedCol.length
+      );
+    }
+
+    const [{ testStepFinished }] = testStepFinishedCol;
+
+    if (
+      testStepFinished.testStepResult.duration.seconds === 0 &&
+      testStepFinished.testStepResult.duration.nanos === 0
+    ) {
+      throw new Error("Expected to find non-zero duration");
+    }
+  }
+);
