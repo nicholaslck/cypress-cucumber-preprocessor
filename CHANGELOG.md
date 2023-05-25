@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v17.2.0
 
 - Add BeforeStep and AfterStep hooks, fixes [#847](https://github.com/badeball/cypress-cucumber-preprocessor/issues/847).
 
