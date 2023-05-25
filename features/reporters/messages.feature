@@ -121,8 +121,7 @@ Feature: messages report
     Given additional Cypress configuration
       """
       {
-        "screenshotOnRunFailure": false,
-        "experimentalInteractiveRunEvents": true
+        "screenshotOnRunFailure": false
       }
       """
     And a file named "cypress/e2e/a.feature" with:
