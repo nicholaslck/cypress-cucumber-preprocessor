@@ -105,6 +105,9 @@ When("I fill in the entire form", function () {
 
 `Before()` and `After()` is similar to Cypress' `beforeEach()` and `afterEach()`, but they can be selected to conditionally run based on the tags of each scenario, as shown below. Furthermore, failure in these hooks does **not** result in remaining tests being skipped. This is contrary to Cypress' `beforeEach` and `afterEach`.
 
+> **Note**  
+> Contrary to how cucumber-js works, these `After()` hooks **does not** run if your scenario fails[^1].
+
 ```ts
 import { Before } from "@badeball/cypress-cucumber-preprocessor";
 
@@ -124,3 +127,5 @@ Before({ tags: "@foo or @bar" }, function () {
   // This hook will be executed before scenarios tagged with @foo or @bar.
 });
 ```
+
+[^1]: This discrepancy between the preprocessor and cucumber-js is currently considered to be unsolvable, as explained [here](https://github.com/badeball/cypress-cucumber-preprocessor/issues/824#issuecomment-1561492281).
