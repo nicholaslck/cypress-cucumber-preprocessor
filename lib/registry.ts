@@ -40,30 +40,32 @@ export class MissingDefinitionError extends CypressCucumberError {}
 
 export class MultipleDefinitionsError extends CypressCucumberError {}
 
-export type HookKeyword = "Before" | "After";
+export type ScenarioHookKeyword = "Before" | "After";
 
-interface IBaseHook<IImplementation> {
+export type StepHookKeyword = "BeforeStep" | "AfterStep";
+
+interface IBaseHook<Implementation, Keyword> {
   tags?: string;
   node: ReturnType<typeof parse>;
-  implementation: IImplementation;
-  keyword: HookKeyword;
+  implementation: Implementation;
+  keyword: Keyword;
   position?: Position;
 }
 
-export interface IHook extends IBaseHook<IHookBody> {
+export interface IHook extends IBaseHook<IHookBody, ScenarioHookKeyword> {
   id: string;
 }
 
-export type IStepHook = IBaseHook<IStepHookBody>;
+export type IStepHook = IBaseHook<IStepHookBody, StepHookKeyword>;
 
 const noopNode = { evaluate: () => true };
 
-function parseHookArguments<T>(
+function parseHookArguments<Implementation, Keyword>(
   options: { tags?: string },
-  fn: T,
-  keyword: HookKeyword,
+  fn: Implementation,
+  keyword: Keyword,
   position?: Position
-): IBaseHook<T> {
+): IBaseHook<Implementation, Keyword> {
   return {
     tags: options.tags,
     node: options.tags ? parse(options.tags) : noopNode,
@@ -157,7 +159,7 @@ export class Registry {
   }
 
   public defineHook(
-    keyword: HookKeyword,
+    keyword: ScenarioHookKeyword,
     options: { tags?: string },
     fn: IHookBody
   ) {
@@ -180,7 +182,7 @@ export class Registry {
   }
 
   public defineStepHook(
-    keyword: HookKeyword,
+    keyword: StepHookKeyword,
     options: { tags?: string },
     fn: IStepHookBody
   ) {
@@ -195,11 +197,11 @@ export class Registry {
   }
 
   public defineBeforeStep(options: { tags?: string }, fn: IStepHookBody) {
-    this.defineStepHook("Before", options, fn);
+    this.defineStepHook("BeforeStep", options, fn);
   }
 
   public defineAfterStep(options: { tags?: string }, fn: IStepHookBody) {
-    this.defineStepHook("After", options, fn);
+    this.defineStepHook("AfterStep", options, fn);
   }
 
   public getMatchingStepDefinitions(text: string) {
@@ -259,7 +261,7 @@ export class Registry {
     return stepDefinition.implementation.apply(world, args);
   }
 
-  public resolveHooks(keyword: HookKeyword, tags: string[]) {
+  public resolveHooks(keyword: ScenarioHookKeyword, tags: string[]) {
     return this.hooks.filter(
       (hook) => hook.keyword === keyword && hook.node.evaluate(tags)
     );
@@ -277,18 +279,18 @@ export class Registry {
     return hook.implementation.call(world);
   }
 
-  public resolveStepHooks(keyword: HookKeyword, tags: string[]) {
+  public resolveStepHooks(keyword: StepHookKeyword, tags: string[]) {
     return this.stepHooks.filter(
       (hook) => hook.keyword === keyword && hook.node.evaluate(tags)
     );
   }
 
   public resolveBeforeStepHooks(tags: string[]) {
-    return this.resolveStepHooks("Before", tags);
+    return this.resolveStepHooks("BeforeStep", tags);
   }
 
   public resolveAfterStepHooks(tags: string[]) {
-    return this.resolveStepHooks("After", tags);
+    return this.resolveStepHooks("AfterStep", tags);
   }
 
   public runStepHook(
