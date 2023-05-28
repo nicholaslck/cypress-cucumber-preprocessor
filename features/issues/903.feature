@@ -59,3 +59,43 @@ Feature: async function handlers
       """
       Cucumber preprocessor detected that you returned a native promise from a function handler, this is not supported. Using async / await is generally speaking not supported when using Cypress, period, preprocessor or not.
       """
+
+  Scenario: async BeforeStep
+    Given a file named "cypress/e2e/a.feature" with:
+      """
+      Feature: a feature
+        Scenario: a scenario
+          Given a step
+      """
+    And a file named "cypress/e2e/a.js" with:
+      """
+      const { BeforeStep, Given } = require("@badeball/cypress-cucumber-preprocessor");
+      BeforeStep(async () => {});
+      Given("a step", () => {})
+      """
+    When I run cypress
+    Then it fails
+    And the output should contain
+      """
+      Cucumber preprocessor detected that you returned a native promise from a function handler, this is not supported. Using async / await is generally speaking not supported when using Cypress, period, preprocessor or not.
+      """
+
+  Scenario: async AfterStep
+    Given a file named "cypress/e2e/a.feature" with:
+      """
+      Feature: a feature
+        Scenario: a scenario
+          Given a step
+      """
+    And a file named "cypress/e2e/a.js" with:
+      """
+      const { AfterStep, Given } = require("@badeball/cypress-cucumber-preprocessor");
+      AfterStep(async () => {});
+      Given("a step", () => {})
+      """
+    When I run cypress
+    Then it fails
+    And the output should contain
+      """
+      Cucumber preprocessor detected that you returned a native promise from a function handler, this is not supported. Using async / await is generally speaking not supported when using Cypress, period, preprocessor or not.
+      """
