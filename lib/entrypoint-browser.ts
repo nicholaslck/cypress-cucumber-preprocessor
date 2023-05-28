@@ -96,7 +96,7 @@ function defineBeforeStep(
   } else if (typeof optionsOrFn === "object" && typeof maybeFn === "function") {
     getRegistry().defineBeforeStep(optionsOrFn, maybeFn);
   } else {
-    throw new Error("Unexpected argument for Before hook");
+    throw new Error("Unexpected argument for BeforeStep hook");
   }
 }
 
@@ -111,7 +111,7 @@ function defineAfterStep(
   } else if (typeof optionsOrFn === "object" && typeof maybeFn === "function") {
     getRegistry().defineAfterStep(optionsOrFn, maybeFn);
   } else {
-    throw new Error("Unexpected argument for After hook");
+    throw new Error("Unexpected argument for AfterStep hook");
   }
 }
 
