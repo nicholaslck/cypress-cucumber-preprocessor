@@ -12,6 +12,10 @@ Feature: create output directories
         "json": {
           "enabled": true,
           "output": "bar/cucumber-report.json"
+        },
+        "html": {
+          "enabled": true,
+          "output": "baz/cucumber-report.html"
         }
       }
       """
