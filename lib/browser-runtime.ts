@@ -453,50 +453,61 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
               testStepId: pickleStep.id,
             };
 
-            try {
-              return runStepWithLogGroup({
-                keyword: assertAndReturn(
-                  "keyword" in scenarioStep && scenarioStep.keyword,
-                  "Expected to find a keyword in the scenario step"
-                ),
-                argument,
-                text,
-                fn: () => {
-                  for (const beforeStepHook of beforeStepHooks) {
-                    registry.runStepHook(this, beforeStepHook, options);
-                  }
-
-                  const result = registry.runStepDefininition(
-                    this,
-                    text,
-                    argument
-                  );
-
-                  for (const afterStepHook of afterStepHooks.reverse()) {
-                    registry.runStepHook(this, afterStepHook, options);
-                  }
-
-                  return result;
-                },
-              }).then((result) => {
-                return {
-                  start,
-                  result,
-                };
-              });
-            } catch (e) {
-              if (e instanceof MissingDefinitionError) {
-                throw new Error(
-                  createMissingStepDefinitionMessage(
-                    context,
-                    pickleStep,
-                    context.registry.parameterTypeRegistry
-                  )
+            const beforeHooksChain = beforeStepHooks.reduce(
+              (chain, beforeStepHook) => {
+                return chain.then(() =>
+                  runStepWithLogGroup({
+                    keyword: "BeforeStep",
+                    text: beforeStepHook.tags,
+                    fn: () =>
+                      registry.runStepHook(this, beforeStepHook, options),
+                  })
                 );
-              } else {
-                throw e;
+              },
+              cy.wrap({} as unknown, { log: false })
+            );
+
+            return beforeHooksChain.then(() => {
+              try {
+                return runStepWithLogGroup({
+                  keyword: assertAndReturn(
+                    "keyword" in scenarioStep && scenarioStep.keyword,
+                    "Expected to find a keyword in the scenario step"
+                  ),
+                  argument,
+                  text,
+                  fn: () => registry.runStepDefininition(this, text, argument),
+                }).then((result) => {
+                  return afterStepHooks
+                    .reverse()
+                    .reduce((chain, afterStepHook) => {
+                      return chain.then(() =>
+                        runStepWithLogGroup({
+                          keyword: "AfterStep",
+                          text: afterStepHook.tags,
+                          fn: () =>
+                            registry.runStepHook(this, afterStepHook, options),
+                        })
+                      );
+                    }, cy.wrap({} as unknown, { log: false }))
+                    .then(() => {
+                      return { start, result };
+                    });
+                });
+              } catch (e) {
+                if (e instanceof MissingDefinitionError) {
+                  throw new Error(
+                    createMissingStepDefinitionMessage(
+                      context,
+                      pickleStep,
+                      context.registry.parameterTypeRegistry
+                    )
+                  );
+                } else {
+                  throw e;
+                }
               }
-            }
+            });
           })
           .then(({ start, result }) => {
             const end = createTimestamp();

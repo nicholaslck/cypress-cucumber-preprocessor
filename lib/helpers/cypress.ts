@@ -47,6 +47,7 @@ export function runStepWithLogGroup(options: {
     name: options.keyword,
     message: options.text == null ? "" : `**${options.text}**`,
     groupStart: true,
+    type: "parent",
   } as object);
 
   if (options.argument instanceof DataTable) {
