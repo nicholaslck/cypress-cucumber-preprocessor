@@ -8,7 +8,17 @@
 
 ### Test code to reproduce
 
-<!-- Preferably link to another, minimal Git repository that illustrates the issue. -->
+<!--
+
+Make sure to read the section titled "Reduced test case" under the contributing guidelines [1]. Your
+report should contain everything necessary in order for us to reproduce the issue. Preferably link
+to another, minimal Git repository that illustrates the issue.
+
+Failure to provide this only serves to waste the maintainer's time. Try not to do this.
+
+[1] https://github.com/badeball/cypress-cucumber-preprocessor/blob/master/CONTRIBUTING.md#reduced-test-case
+
+-->
 
 ### Versions
 
