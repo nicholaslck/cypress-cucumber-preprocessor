@@ -95,7 +95,7 @@ export default async function addCucumberPreprocessorPlugin(
   }
 
   if (!options.omitBeforeSpecHandler) {
-    on("before:spec", () => beforeSpecHandler(config));
+    on("before:spec", (spec) => beforeSpecHandler(config, spec));
   }
 
   if (!options.omitAfterSpecHandler) {

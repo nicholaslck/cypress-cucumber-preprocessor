@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 - Step hooks are logged using separate log groups, similar to how scenario hooks are logged.
 
+- Fix error in non-feature specs under certain conditions, fixes [#1028](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1028).
+
 ## v17.2.0
 
 - Add BeforeStep and AfterStep hooks, fixes [#847](https://github.com/badeball/cypress-cucumber-preprocessor/issues/847).

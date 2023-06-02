@@ -98,6 +98,8 @@ let state: State = {
   state: "initial",
 };
 
+const isFeature = (spec: Cypress.Spec) => spec.name.endsWith(".feature");
+
 export async function beforeRunHandler(config: Cypress.PluginConfigOptions) {
   debug("beforeRunHandler()");
 
@@ -281,10 +283,13 @@ export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
   }
 }
 
-export async function beforeSpecHandler(config: Cypress.PluginConfigOptions) {
+export async function beforeSpecHandler(
+  config: Cypress.PluginConfigOptions,
+  spec: Cypress.Spec
+) {
   debug("beforeSpecHandler()");
 
-  if (!config.isTextTerminal) {
+  if (!config.isTextTerminal || !isFeature(spec)) {
     return;
   }
 
@@ -320,7 +325,7 @@ export async function afterSpecHandler(
 ) {
   debug("afterSpecHandler()");
 
-  if (!config.isTextTerminal) {
+  if (!config.isTextTerminal || !isFeature(spec)) {
     return;
   }
 

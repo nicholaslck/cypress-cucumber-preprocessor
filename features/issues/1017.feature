@@ -2,7 +2,7 @@
 
 @network
 Feature: JSON report
-  Scenario: with after hook
+  Scenario: with after hook and reload-behavior
     Given additional preprocessor configuration
       """
       {
