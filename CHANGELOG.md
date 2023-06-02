@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v17.2.1
 
 - Step hooks are logged using separate log groups, similar to how scenario hooks are logged.
 
