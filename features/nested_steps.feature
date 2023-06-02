@@ -12,8 +12,11 @@ Feature: nesten steps
       const { Given, Step } = require("@badeball/cypress-cucumber-preprocessor");
       Given("a nested step", function() {
         Step(this, "another step");
+        cy.get("@bar").should("equal", "foo");
       });
-      Given("another step", function() {});
+      Given("another step", function() {
+        cy.wrap("foo").as("bar");
+      });
       """
     When I run cypress
     Then it passes
