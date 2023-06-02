@@ -983,7 +983,7 @@ function createMissingStepDefinitionMessage(
       : noStepDefinitionPathsTemplate;
 
   const maybeEscape = (string: string) =>
-    strictIsInteractive() ? string.replace("*", "\\*") : string;
+    strictIsInteractive() ? string.replaceAll("*", "\\*") : string;
 
   const prettyPrintList = (items: string[]) =>
     items.map((item) => "  - " + maybeEscape(item)).join("\n");

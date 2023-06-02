@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 - Step hooks are logged using separate log groups, similar to how scenario hooks are logged.
 
+- Properly escape error messages in interactive mode.
+
 - Fix error in non-feature specs under certain conditions, fixes [#1028](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1028).
 
 - Allow doesFeatureMatch to be called in support files, fixes [#1025](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1025).
