@@ -1,4 +1,4 @@
-Feature: mixing feature and non-feature specs
+Feature: mixing feature and non-feature specs: API
   Background:
     Given additional Cypress configuration
       """
@@ -9,7 +9,7 @@ Feature: mixing feature and non-feature specs
       }
       """
 
-  Scenario: one feature and non-feature specs
+  Scenario: feature
     Given a file named "cypress/e2e/a.feature" with:
       """
       @foo
@@ -25,13 +25,33 @@ Feature: mixing feature and non-feature specs
         expect(doesFeatureMatch("@foo")).to.be.true;
       });
       """
-    And a file named "cypress/e2e/b.spec.js" with:
+    And a file named "cypress/support/e2e.js" with:
       """
-      const { isFeature } = require("@badeball/cypress-cucumber-preprocessor");
-      it("should work", () => {
-        expect(isFeature()).to.be.false;
+      const { isFeature, doesFeatureMatch } = require("@badeball/cypress-cucumber-preprocessor");
+      beforeEach(() => {
+        expect(isFeature()).to.be.true;
+        expect(doesFeatureMatch("@foo")).to.be.true;
       });
       """
     When I run cypress
     Then it passes
-    And it should appear to have ran spec "a.feature" and "b.spec.js"
+
+  Scenario: non-feature
+    Given a file named "cypress/e2e/a.spec.js" with:
+      """
+      const { isFeature, doesFeatureMatch } = require("@badeball/cypress-cucumber-preprocessor");
+      it("should work", () => {
+        expect(isFeature()).to.be.false;
+        expect(doesFeatureMatch).to.throw("Expected to find internal properties, but didn't. This is likely because you're calling doesFeatureMatch() in a non-feature spec. Use doesFeatureMatch() in combination with isFeature() if you have both feature and non-feature specs");
+      });
+      """
+    And a file named "cypress/support/e2e.js" with:
+      """
+      const { isFeature, doesFeatureMatch } = require("@badeball/cypress-cucumber-preprocessor");
+      beforeEach(() => {
+        expect(isFeature()).to.be.false;
+        expect(doesFeatureMatch).to.throw("Expected to find internal properties, but didn't. This is likely because you're calling doesFeatureMatch() in a non-feature spec. Use doesFeatureMatch() in combination with isFeature() if you have both feature and non-feature specs");
+      });
+      """
+    When I run cypress
+    Then it passes

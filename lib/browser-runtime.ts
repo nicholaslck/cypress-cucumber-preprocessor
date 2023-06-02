@@ -94,6 +94,9 @@ interface IStep {
   pickleStep?: messages.PickleStep;
 }
 
+const internalPropertiesReplacementText =
+  "Internal properties of cypress-cucumber-preprocessor omitted from report.";
+
 export interface InternalSpecProperties {
   pickle: messages.Pickle;
   testCaseStartedId: string;
@@ -101,30 +104,15 @@ export interface InternalSpecProperties {
   currentStep?: IStep;
   allSteps: IStep[];
   remainingSteps: IStep[];
+  toJSON(): typeof internalPropertiesReplacementText;
 }
 
 export interface InternalSuiteProperties {
   isEventHandlersAttached?: boolean;
 }
 
-let specId = 0;
-
-const internalSpecProperties = new Map<number, InternalSpecProperties>();
-
-function createInternalSpecProperties(
-  properties: InternalSpecProperties
-): number {
-  internalSpecProperties.set(++specId, properties);
-  return specId;
-}
-
 export function retrieveInternalSpecProperties(): InternalSpecProperties {
-  const reference = Cypress.env(INTERNAL_SPEC_PROPERTIES) as number;
-
-  return assertAndReturn(
-    internalSpecProperties.get(reference),
-    `Expected to find internal spec properties with reference = ${reference}`
-  );
+  return Cypress.env(INTERNAL_SPEC_PROPERTIES) as InternalSpecProperties;
 }
 
 function updateInternalSpecProperties(
@@ -315,11 +303,11 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
     testCaseStartedId: context.newId(),
     allSteps: steps,
     remainingSteps: [...steps],
+    toJSON: () => internalPropertiesReplacementText,
   };
 
   const internalEnv = {
-    [INTERNAL_SPEC_PROPERTIES]:
-      createInternalSpecProperties(internalProperties),
+    [INTERNAL_SPEC_PROPERTIES]: internalProperties,
   };
 
   const suiteOptions = tags

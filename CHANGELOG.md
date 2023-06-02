@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - Fix error in non-feature specs under certain conditions, fixes [#1028](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1028).
 
+- Allow doesFeatureMatch to be called in support files, fixes [#1025](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1025).
+
 ## v17.2.0
 
 - Add BeforeStep and AfterStep hooks, fixes [#847](https://github.com/badeball/cypress-cucumber-preprocessor/issues/847).
