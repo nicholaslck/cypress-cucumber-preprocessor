@@ -2,7 +2,7 @@ import syncFs, { promises as fs, constants as fsConstants } from "fs";
 
 import path from "path";
 
-import stream from "stream";
+import stream from "stream/promises";
 
 import { EventEmitter } from "events";
 
@@ -258,28 +258,19 @@ export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
 
     const output = syncFs.createWriteStream(htmlPath);
 
-    await new Promise<void>((resolve, reject) => {
-      stream.pipeline(
-        input,
-        new NdjsonToMessageStream(),
-        new CucumberHtmlStream(
-          require.resolve("@cucumber/html-formatter/dist/main.css", {
-            paths: [__dirname],
-          }),
-          require.resolve("@cucumber/html-formatter/dist/main.js", {
-            paths: [__dirname],
-          })
-        ),
-        output,
-        (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        }
-      );
-    });
+    await stream.pipeline(
+      input,
+      new NdjsonToMessageStream(),
+      new CucumberHtmlStream(
+        require.resolve("@cucumber/html-formatter/dist/main.css", {
+          paths: [__dirname],
+        }),
+        require.resolve("@cucumber/html-formatter/dist/main.js", {
+          paths: [__dirname],
+        })
+      ),
+      output
+    );
   }
 }
 
