@@ -4,15 +4,9 @@ import path from "path";
 
 import stream from "stream/promises";
 
-import { EventEmitter } from "events";
-
 import chalk from "chalk";
 
-import { formatterHelpers, JsonFormatter } from "@cucumber/cucumber";
-
 import { NdjsonToMessageStream } from "@cucumber/message-streams";
-
-import CucumberHtmlStream from "@cucumber/html-formatter";
 
 import messages from "@cucumber/messages";
 
@@ -33,13 +27,15 @@ import { ensureIsAbsolute } from "./helpers/paths";
 
 import { createTimestamp } from "./helpers/messages";
 
-import { notNull } from "./helpers/type-guards";
-
 import { memoize } from "./helpers/memoize";
 
 import debug from "./helpers/debug";
 
 import { createError } from "./helpers/error";
+
+import { assertIsString } from "./helpers/assertions";
+
+import { createHtmlStream, createJsonFormatter } from "./helpers/formatters";
 
 const resolve = memoize(origResolve);
 
@@ -191,57 +187,18 @@ export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
 
     let jsonOutput: string | undefined;
 
-    const log = (output: string | Uint8Array) => {
-      if (typeof output !== "string") {
-        throw createError(
-          "Expected a JSON output of string, but got " + typeof output
-        );
-      } else {
-        jsonOutput = output;
-      }
-    };
-
-    const eventBroadcaster = new EventEmitter();
-
-    const eventDataCollector = new formatterHelpers.EventDataCollector(
-      eventBroadcaster
-    );
-
-    const stepDefinitions = messages
-      .map((m) => m.stepDefinition)
-      .filter(notNull)
-      .map((s) => {
-        return {
-          id: s.id,
-          uri: "not available",
-          line: 0,
-        };
-      });
-
-    new JsonFormatter({
-      eventBroadcaster,
-      eventDataCollector,
-      log,
-      supportCodeLibrary: {
-        stepDefinitions,
-      } as any,
-      colorFns: null as any,
-      cwd: null as any,
-      parsedArgvOptions: {},
-      snippetBuilder: null as any,
-      stream: null as any,
-      cleanup: null as any,
+    const eventBroadcaster = createJsonFormatter(messages, (chunk) => {
+      jsonOutput = chunk;
     });
 
     for (const message of messages) {
       eventBroadcaster.emit("envelope", message);
     }
 
-    if (typeof jsonOutput !== "string") {
-      throw createError(
-        "Expected JSON formatter to have finished, but it never returned"
-      );
-    }
+    assertIsString(
+      jsonOutput,
+      "Expected JSON formatter to have finished, but it never returned"
+    );
 
     await fs.writeFile(jsonPath, jsonOutput);
   }
@@ -261,14 +218,7 @@ export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
     await stream.pipeline(
       input,
       new NdjsonToMessageStream(),
-      new CucumberHtmlStream(
-        require.resolve("@cucumber/html-formatter/dist/main.css", {
-          paths: [__dirname],
-        }),
-        require.resolve("@cucumber/html-formatter/dist/main.js", {
-          paths: [__dirname],
-        })
-      ),
+      createHtmlStream(),
       output
     );
   }
