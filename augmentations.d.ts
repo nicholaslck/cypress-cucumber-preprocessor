@@ -15,6 +15,11 @@ declare module "@cucumber/cucumber" {
   }
 }
 
+declare module "stream" {
+  // This is as of this writing, not typed.
+  function compose(...streams: Stream[]): Duplex;
+}
+
 declare global {
   namespace globalThis {
     var __cypress_cucumber_preprocessor_registry_dont_use_this:

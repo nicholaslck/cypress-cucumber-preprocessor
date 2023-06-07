@@ -76,6 +76,7 @@ interface CompositionContext {
   specEnvelopes: messages.Envelope[];
   testFilter: Node;
   omitFiltered: boolean;
+  prettyEnabled: boolean;
   messagesEnabled: boolean;
   stepDefinitionHints: {
     stepDefinitions: string | string[];
@@ -127,34 +128,72 @@ function retrieveInternalSuiteProperties():
   return Cypress.env(INTERNAL_SUITE_PROPERTIES);
 }
 
-function taskSpecEnvelopes(messages: messages.Envelope[]) {
-  cy.task(TASK_SPEC_ENVELOPES, { messages } as ITaskSpecEnvelopes, {
-    log: false,
-  });
+function shouldPropagateMessages(context: CompositionContext) {
+  return context.prettyEnabled || context.messagesEnabled;
 }
 
-function taskTestCaseStarted(testCaseStarted: messages.TestCaseStarted) {
-  cy.task(TASK_TEST_CASE_STARTED, testCaseStarted as ITaskTestCaseStarted, {
-    log: false,
-  });
+function taskSpecEnvelopes(context: CompositionContext) {
+  if (shouldPropagateMessages(context)) {
+    cy.task(
+      TASK_SPEC_ENVELOPES,
+      { messages: context.specEnvelopes } as ITaskSpecEnvelopes,
+      {
+        log: false,
+      }
+    );
+  }
 }
 
-function taskTestCaseFinished(testCasefinished: messages.TestCaseFinished) {
-  cy.task(TASK_TEST_CASE_FINISHED, testCasefinished as ITaskTestCaseFinished, {
-    log: false,
-  });
+function taskTestCaseStarted(
+  context: CompositionContext,
+  testCaseStarted: messages.TestCaseStarted
+) {
+  if (shouldPropagateMessages(context)) {
+    cy.task(TASK_TEST_CASE_STARTED, testCaseStarted as ITaskTestCaseStarted, {
+      log: false,
+    });
+  }
 }
 
-function taskTestStepStarted(testStepStarted: messages.TestStepStarted) {
-  cy.task(TASK_TEST_STEP_STARTED, testStepStarted as ITaskTestStepStarted, {
-    log: false,
-  });
+function taskTestCaseFinished(
+  context: CompositionContext,
+  testCasefinished: messages.TestCaseFinished
+) {
+  if (shouldPropagateMessages(context)) {
+    cy.task(
+      TASK_TEST_CASE_FINISHED,
+      testCasefinished as ITaskTestCaseFinished,
+      {
+        log: false,
+      }
+    );
+  }
 }
 
-function taskTestStepFinished(testStepfinished: messages.TestStepFinished) {
-  cy.task(TASK_TEST_STEP_FINISHED, testStepfinished as ITaskTestStepFinished, {
-    log: false,
-  });
+function taskTestStepStarted(
+  context: CompositionContext,
+  testStepStarted: messages.TestStepStarted
+) {
+  if (shouldPropagateMessages(context)) {
+    cy.task(TASK_TEST_STEP_STARTED, testStepStarted as ITaskTestStepStarted, {
+      log: false,
+    });
+  }
+}
+
+function taskTestStepFinished(
+  context: CompositionContext,
+  testStepfinished: messages.TestStepFinished
+) {
+  if (shouldPropagateMessages(context)) {
+    cy.task(
+      TASK_TEST_STEP_FINISHED,
+      testStepfinished as ITaskTestStepFinished,
+      {
+        log: false,
+      }
+    );
+  }
 }
 
 function findPickleById(context: CompositionContext, astId: string) {
@@ -325,14 +364,12 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
     const { remainingSteps, testCaseStartedId } =
       retrieveInternalSpecProperties();
 
-    if (context.messagesEnabled) {
-      taskTestCaseStarted({
-        id: testCaseStartedId,
-        testCaseId,
-        attempt: attempt++,
-        timestamp: createTimestamp(),
-      });
-    }
+    taskTestCaseStarted(context, {
+      id: testCaseStartedId,
+      testCaseId,
+      attempt: attempt++,
+      timestamp: createTimestamp(),
+    });
 
     window.testState = {
       gherkinDocument,
@@ -351,13 +388,11 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
 
           internalProperties.currentStepStartedAt = start;
 
-          if (context.messagesEnabled) {
-            taskTestStepStarted({
-              testStepId: hook.id,
-              testCaseStartedId,
-              timestamp: start,
-            });
-          }
+          taskTestStepStarted(context, {
+            testStepId: hook.id,
+            testCaseStartedId,
+            timestamp: start,
+          });
 
           return cy.wrap(start, { log: false });
         })
@@ -373,17 +408,15 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
           .then((start) => {
             const end = createTimestamp();
 
-            if (context.messagesEnabled) {
-              taskTestStepFinished({
-                testStepId: hook.id,
-                testCaseStartedId,
-                testStepResult: {
-                  status: messages.TestStepResultStatus.PASSED,
-                  duration: duration(start, end),
-                },
-                timestamp: end,
-              });
-            }
+            taskTestStepFinished(context, {
+              testStepId: hook.id,
+              testCaseStartedId,
+              testStepResult: {
+                status: messages.TestStepResultStatus.PASSED,
+                duration: duration(start, end),
+              },
+              timestamp: end,
+            });
 
             remainingSteps.shift();
           });
@@ -420,13 +453,11 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
           internalProperties.currentStep = { pickleStep };
           internalProperties.currentStepStartedAt = start;
 
-          if (context.messagesEnabled) {
-            taskTestStepStarted({
-              testStepId: pickleStep.id,
-              testCaseStartedId,
-              timestamp: start,
-            });
-          }
+          taskTestStepStarted(context, {
+            testStepId: pickleStep.id,
+            testCaseStartedId,
+            timestamp: start,
+          });
 
           return cy.wrap(start, { log: false });
         })
@@ -501,44 +532,42 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
             const end = createTimestamp();
 
             if (result === "pending") {
-              if (context.messagesEnabled) {
-                taskTestStepFinished({
-                  testStepId: pickleStep.id,
+              taskTestStepFinished(context, {
+                testStepId: pickleStep.id,
+                testCaseStartedId,
+                testStepResult: {
+                  status: messages.TestStepResultStatus.PENDING,
+                  duration: duration(start, end),
+                },
+                timestamp: end,
+              });
+
+              remainingSteps.shift();
+
+              for (const skippedStep of remainingSteps) {
+                const testStepId = assertAndReturn(
+                  skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
+                  "Expected a step to either be a hook or a pickleStep"
+                );
+
+                taskTestStepStarted(context, {
+                  testStepId,
                   testCaseStartedId,
-                  testStepResult: {
-                    status: messages.TestStepResultStatus.PENDING,
-                    duration: duration(start, end),
-                  },
-                  timestamp: end,
+                  timestamp: createTimestamp(),
                 });
 
-                remainingSteps.shift();
-
-                for (const skippedStep of remainingSteps) {
-                  const testStepId = assertAndReturn(
-                    skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
-                    "Expected a step to either be a hook or a pickleStep"
-                  );
-
-                  taskTestStepStarted({
-                    testStepId,
-                    testCaseStartedId,
-                    timestamp: createTimestamp(),
-                  });
-
-                  taskTestStepFinished({
-                    testStepId,
-                    testCaseStartedId,
-                    testStepResult: {
-                      status: messages.TestStepResultStatus.SKIPPED,
-                      duration: {
-                        seconds: 0,
-                        nanos: 0,
-                      },
+                taskTestStepFinished(context, {
+                  testStepId,
+                  testCaseStartedId,
+                  testStepResult: {
+                    status: messages.TestStepResultStatus.SKIPPED,
+                    duration: {
+                      seconds: 0,
+                      nanos: 0,
                     },
-                    timestamp: createTimestamp(),
-                  });
-                }
+                  },
+                  timestamp: createTimestamp(),
+                });
               }
 
               for (let i = 0, count = remainingSteps.length; i < count; i++) {
@@ -547,17 +576,15 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
 
               cy.then(() => this.skip());
             } else {
-              if (context.messagesEnabled) {
-                taskTestStepFinished({
-                  testStepId: pickleStep.id,
-                  testCaseStartedId,
-                  testStepResult: {
-                    status: messages.TestStepResultStatus.PASSED,
-                    duration: duration(start, end),
-                  },
-                  timestamp: end,
-                });
-              }
+              taskTestStepFinished(context, {
+                testStepId: pickleStep.id,
+                testCaseStartedId,
+                testStepResult: {
+                  status: messages.TestStepResultStatus.PASSED,
+                  duration: duration(start, end),
+                },
+                timestamp: end,
+              });
 
               remainingSteps.shift();
             }
@@ -609,9 +636,7 @@ function beforeHandler(context: CompositionContext) {
     );
   }
 
-  if (context.messagesEnabled) {
-    taskSpecEnvelopes(context.specEnvelopes);
-  }
+  taskSpecEnvelopes(context);
 }
 
 function beforeEachHandler(context: CompositionContext) {
@@ -626,140 +651,137 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
   const { testCaseStartedId, currentStepStartedAt, remainingSteps } =
     properties;
 
-  if (context.messagesEnabled) {
-    const endTimestamp = createTimestamp();
+  const endTimestamp = createTimestamp();
 
-    if (remainingSteps.length > 0) {
-      if (this.currentTest?.state === "failed") {
-        const error = assertAndReturn(
-          this.currentTest?.err?.message,
-          "Expected to find an error message"
-        );
+  if (remainingSteps.length > 0) {
+    if (this.currentTest?.state === "failed") {
+      const error = assertAndReturn(
+        this.currentTest?.err?.message,
+        "Expected to find an error message"
+      );
 
-        if (HOOK_FAILURE_EXPR.test(error)) {
-          return;
-        }
+      if (HOOK_FAILURE_EXPR.test(error)) {
+        return;
+      }
 
-        const failedStep = assertAndReturn(
-          remainingSteps.shift(),
-          "Expected there to be a remaining step"
-        );
+      const failedStep = assertAndReturn(
+        remainingSteps.shift(),
+        "Expected there to be a remaining step"
+      );
 
+      const testStepId = assertAndReturn(
+        failedStep.hook?.id ?? failedStep.pickleStep?.id,
+        "Expected a step to either be a hook or a pickleStep"
+      );
+
+      const failedTestStepFinished: messages.TestStepFinished = error.includes(
+        "Step implementation missing"
+      )
+        ? {
+            testStepId,
+            testCaseStartedId,
+            testStepResult: {
+              status: messages.TestStepResultStatus.UNDEFINED,
+              duration: {
+                seconds: 0,
+                nanos: 0,
+              },
+            },
+            timestamp: endTimestamp,
+          }
+        : {
+            testStepId,
+            testCaseStartedId,
+            testStepResult: {
+              status: error.includes("Multiple matching step definitions for")
+                ? messages.TestStepResultStatus.AMBIGUOUS
+                : messages.TestStepResultStatus.FAILED,
+              message: error,
+              duration: duration(
+                assertAndReturn(
+                  currentStepStartedAt,
+                  "Expected there to be a timestamp for current step"
+                ),
+                endTimestamp
+              ),
+            },
+            timestamp: endTimestamp,
+          };
+
+      taskTestStepFinished(context, failedTestStepFinished);
+
+      for (const skippedStep of remainingSteps) {
         const testStepId = assertAndReturn(
-          failedStep.hook?.id ?? failedStep.pickleStep?.id,
+          skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
           "Expected a step to either be a hook or a pickleStep"
         );
 
-        const failedTestStepFinished: messages.TestStepFinished =
-          error.includes("Step implementation missing")
-            ? {
-                testStepId,
-                testCaseStartedId,
-                testStepResult: {
-                  status: messages.TestStepResultStatus.UNDEFINED,
-                  duration: {
-                    seconds: 0,
-                    nanos: 0,
-                  },
-                },
-                timestamp: endTimestamp,
-              }
-            : {
-                testStepId,
-                testCaseStartedId,
-                testStepResult: {
-                  status: error.includes(
-                    "Multiple matching step definitions for"
-                  )
-                    ? messages.TestStepResultStatus.AMBIGUOUS
-                    : messages.TestStepResultStatus.FAILED,
-                  message: error,
-                  duration: duration(
-                    assertAndReturn(
-                      currentStepStartedAt,
-                      "Expected there to be a timestamp for current step"
-                    ),
-                    endTimestamp
-                  ),
-                },
-                timestamp: endTimestamp,
-              };
+        taskTestStepStarted(context, {
+          testStepId,
+          testCaseStartedId,
+          timestamp: endTimestamp,
+        });
 
-        taskTestStepFinished(failedTestStepFinished);
-
-        for (const skippedStep of remainingSteps) {
-          const testStepId = assertAndReturn(
-            skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
-            "Expected a step to either be a hook or a pickleStep"
-          );
-
-          taskTestStepStarted({
-            testStepId,
-            testCaseStartedId,
-            timestamp: endTimestamp,
-          });
-
-          taskTestStepFinished({
-            testStepId,
-            testCaseStartedId,
-            testStepResult: {
-              status: messages.TestStepResultStatus.SKIPPED,
-              duration: {
-                seconds: 0,
-                nanos: 0,
-              },
+        taskTestStepFinished(context, {
+          testStepId,
+          testCaseStartedId,
+          testStepResult: {
+            status: messages.TestStepResultStatus.SKIPPED,
+            duration: {
+              seconds: 0,
+              nanos: 0,
             },
-            timestamp: endTimestamp,
-          });
-        }
-      } else {
-        for (const skippedStep of remainingSteps) {
-          const testStepId = assertAndReturn(
-            skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
-            "Expected a step to either be a hook or a pickleStep"
-          );
+          },
+          timestamp: endTimestamp,
+        });
+      }
+    } else {
+      for (const skippedStep of remainingSteps) {
+        const testStepId = assertAndReturn(
+          skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
+          "Expected a step to either be a hook or a pickleStep"
+        );
 
-          taskTestStepStarted({
-            testStepId,
-            testCaseStartedId,
-            timestamp: endTimestamp,
-          });
+        taskTestStepStarted(context, {
+          testStepId,
+          testCaseStartedId,
+          timestamp: endTimestamp,
+        });
 
-          taskTestStepFinished({
-            testStepId,
-            testCaseStartedId,
-            testStepResult: {
-              status: messages.TestStepResultStatus.UNKNOWN,
-              duration: {
-                seconds: 0,
-                nanos: 0,
-              },
+        taskTestStepFinished(context, {
+          testStepId,
+          testCaseStartedId,
+          testStepResult: {
+            status: messages.TestStepResultStatus.UNKNOWN,
+            duration: {
+              seconds: 0,
+              nanos: 0,
             },
-            timestamp: endTimestamp,
-          });
-        }
+          },
+          timestamp: endTimestamp,
+        });
       }
     }
-
-    const currentRetry = assertAndReturn(
-      (this.currentTest as any)?._currentRetry,
-      "Expected to find an attribute _currentRetry"
-    );
-
-    const retries = assertAndReturn(
-      (this.currentTest as any)?._retries,
-      "Expected to find an attribute _retries"
-    );
-
-    const willBeRetried =
-      this.currentTest?.state === "failed" ? currentRetry < retries : false;
-
-    taskTestCaseFinished({
-      testCaseStartedId,
-      timestamp: endTimestamp,
-      willBeRetried,
-    });
   }
+
+  const currentRetry = assertAndReturn(
+    (this.currentTest as any)?._currentRetry,
+    "Expected to find an attribute _currentRetry"
+  );
+
+  const retries = assertAndReturn(
+    (this.currentTest as any)?._retries,
+    "Expected to find an attribute _retries"
+  );
+
+  const willBeRetried =
+    this.currentTest?.state === "failed" ? currentRetry < retries : false;
+
+  taskTestCaseFinished(context, {
+    testCaseStartedId,
+    timestamp: endTimestamp,
+    willBeRetried,
+  });
 
   /**
    * Repopulate internal properties in case previous test is retried.
@@ -776,6 +798,7 @@ export default function createTests(
   source: string,
   gherkinDocument: messages.GherkinDocument,
   pickles: messages.Pickle[],
+  prettyEnabled: boolean,
   messagesEnabled: boolean,
   omitFiltered: boolean,
   stepDefinitionHints: {
@@ -907,6 +930,7 @@ export default function createTests(
     specEnvelopes,
     testFilter,
     omitFiltered,
+    prettyEnabled,
     messagesEnabled,
     stepDefinitionHints,
   };

@@ -141,6 +141,27 @@ function validateUserConfigurationEntry(
       };
       return { [key]: messagesConfig };
     }
+    case "pretty": {
+      if (typeof value !== "object" || value == null) {
+        throw new Error(
+          `Expected an object (pretty), but got ${util.inspect(value)}`
+        );
+      }
+      if (
+        !hasOwnProperty(value, "enabled") ||
+        typeof value.enabled !== "boolean"
+      ) {
+        throw new Error(
+          `Expected a boolean (pretty.enabled), but got ${util.inspect(
+            value.enabled
+          )}`
+        );
+      }
+      const prettyConfig = {
+        enabled: value.enabled,
+      };
+      return { [key]: prettyConfig };
+    }
     case "filterSpecs": {
       if (!isBoolean(value)) {
         throw new Error(
@@ -284,6 +305,22 @@ function validateEnvironmentOverrides(
     }
   }
 
+  if (hasOwnProperty(environment, "prettyEnabled")) {
+    const { prettyEnabled } = environment;
+
+    if (isBoolean(prettyEnabled)) {
+      overrides.prettyEnabled = prettyEnabled;
+    } else if (isString(prettyEnabled)) {
+      overrides.prettyEnabled = stringToMaybeBoolean(prettyEnabled);
+    } else {
+      throw new Error(
+        `Expected a boolean (prettyEnabled), but got ${util.inspect(
+          prettyEnabled
+        )}`
+      );
+    }
+  }
+
   if (hasOwnProperty(environment, "filterSpecs")) {
     const { filterSpecs } = environment;
 
@@ -339,6 +376,7 @@ interface IEnvironmentOverrides {
   jsonOutput?: string;
   htmlEnabled?: boolean;
   htmlOutput?: string;
+  prettyEnabled?: boolean;
   filterSpecs?: boolean;
   omitFiltered?: boolean;
 }
@@ -356,6 +394,9 @@ export interface IBaseUserConfiguration {
   html?: {
     enabled: boolean;
     output?: string;
+  };
+  pretty?: {
+    enabled: boolean;
   };
   filterSpecs?: boolean;
   omitFiltered?: boolean;
@@ -380,6 +421,9 @@ export interface IPreprocessorConfiguration {
     enabled: boolean;
     output: string;
   };
+  readonly pretty: {
+    enabled: boolean;
+  };
   readonly filterSpecs: boolean;
   readonly omitFiltered: boolean;
   readonly implicitIntegrationFolder: string;
@@ -390,6 +434,9 @@ const DEFAULT_STEP_DEFINITIONS = [
   "[integration-directory]/[filepath].{js,mjs,ts,tsx}",
   "cypress/support/step_definitions/**/*.{js,mjs,ts,tsx}",
 ];
+
+export const COMPILED_REPORTER_ENTRYPOINT =
+  "dist/subpath-entrypoints/pretty-reporter.js";
 
 export function combineIntoConfiguration(
   configuration: IUserConfiguration,
@@ -453,6 +500,14 @@ export function combineIntoConfiguration(
       "cucumber-messages.ndjson",
   };
 
+  const pretty: IPreprocessorConfiguration["pretty"] = {
+    enabled:
+      overrides.prettyEnabled ??
+      specific?.pretty?.enabled ??
+      unspecific.pretty?.enabled ??
+      false,
+  };
+
   const filterSpecs: IPreprocessorConfiguration["filterSpecs"] =
     overrides.filterSpecs ??
     specific?.filterSpecs ??
@@ -470,6 +525,7 @@ export function combineIntoConfiguration(
     messages,
     json,
     html,
+    pretty,
     filterSpecs,
     omitFiltered,
     implicitIntegrationFolder,
@@ -522,6 +578,14 @@ export async function resolve(
     cypressConfig,
     implicitIntegrationFolder
   );
+
+  if (cypressConfig.reporter.endsWith(COMPILED_REPORTER_ENTRYPOINT)) {
+    debug(
+      "detected use of @badeball/cypress-cucumber-preprocessor/pretty-reporter, enabling pretty output"
+    );
+
+    configuration.pretty.enabled = true;
+  }
 
   debug(`resolved configuration ${util.inspect(configuration)}`);
 

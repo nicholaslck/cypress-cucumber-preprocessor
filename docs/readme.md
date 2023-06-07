@@ -6,6 +6,7 @@
 * [State management](state-management.md)
 * [Step definitions](step-definitions.md)
 * [Tags](tags.md)
+* [Pretty output](pretty-output.md)
 * Reports
   * [Messages report](messages-report.md)
   * [JSON report](json-report.md)

@@ -141,7 +141,7 @@ Then(
 
 Then("the output should contain", function (content) {
   assert.match(
-    stripAnsi(this.lastRun.stdout).replaceAll("\\", "/"),
+    stripAnsi(this.lastRun.stdout).replaceAll("\\", "/").replaceAll("×", "✖"),
     new RegExp(rescape(content))
   );
 });

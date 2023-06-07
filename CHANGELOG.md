@@ -32,6 +32,10 @@ Breaking changes:
   }
   ```
 
+Other changes:
+
+- Add experimental support for [pretty output](docs/pretty-output.md) similar to that of [`@cucumber/pretty-formatter`](https://github.com/cucumber/cucumber-js-pretty-formatter), fixes [#810](https://github.com/badeball/cypress-cucumber-preprocessor/issues/810).
+
 ## v17.2.1
 
 - Step hooks are logged using separate log groups, similar to how scenario hooks are logged.

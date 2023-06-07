@@ -14,6 +14,7 @@ import { getStepDefinitionPatterns, pathParts } from "./step-definitions";
 const DUMMY_CONFIG: ICypressConfiguration = {
   testingType: "e2e",
   projectRoot: "",
+  reporter: "spec",
   specPattern: [],
   excludeSpecPattern: [],
   env: {},

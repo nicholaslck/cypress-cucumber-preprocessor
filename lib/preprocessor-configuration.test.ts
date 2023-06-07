@@ -6,6 +6,7 @@ import {
 import assert from "assert";
 
 import {
+  COMPILED_REPORTER_ENTRYPOINT,
   IBaseUserConfiguration,
   IPreprocessorConfiguration,
   IUserConfiguration,
@@ -14,6 +15,7 @@ import {
 
 const DUMMY_POST10_CONFIG: Omit<ICypressConfiguration, "testingType"> = {
   projectRoot: "",
+  reporter: "spec",
   specPattern: [],
   excludeSpecPattern: [],
   env: {},
@@ -27,11 +29,16 @@ async function test<T>(options: {
   testingType: TestingType;
   environment: Record<string, unknown>;
   configuration: IUserConfiguration;
+  cypressConfiguration?: Partial<ICypressConfiguration>;
   expectedValue: T;
   getValueFn: GetValueFn<T>;
 }) {
   const configuration = await resolve(
-    { ...DUMMY_POST10_CONFIG, testingType: options.testingType },
+    Object.assign(
+      { testingType: options.testingType },
+      DUMMY_POST10_CONFIG,
+      options.cypressConfiguration
+    ),
     options.environment,
     "cypress/e2e",
     () => options.configuration
@@ -474,6 +481,39 @@ describe("resolve()", () => {
             getValueFn,
             setValueFn,
           });
+        });
+      });
+
+      describe("pretty", () => {
+        describe("enabled", () => {
+          const getValueFn = (
+            configuration: IPreprocessorConfiguration
+          ): boolean => configuration.pretty.enabled;
+
+          const setValueFn = (
+            configuration: IBaseUserConfiguration,
+            value: boolean
+          ) => (configuration.pretty = { enabled: value });
+
+          basicBooleanExample({
+            testingType,
+            default: false,
+            environmentKey: "prettyEnabled",
+            getValueFn,
+            setValueFn,
+          });
+
+          it("should detect use of our reporter and enabled pretty output", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: {},
+              cypressConfiguration: {
+                reporter: "/foo/bar/" + COMPILED_REPORTER_ENTRYPOINT,
+              },
+              expectedValue: true,
+            }));
         });
       });
 

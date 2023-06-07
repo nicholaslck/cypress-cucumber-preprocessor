@@ -2,13 +2,19 @@ import syncFs, { promises as fs, constants as fsConstants } from "fs";
 
 import path from "path";
 
-import stream from "stream/promises";
+import { pipeline } from "stream/promises";
+
+import stream from "stream";
+
+import { EventEmitter } from "events";
 
 import chalk from "chalk";
 
 import { NdjsonToMessageStream } from "@cucumber/message-streams";
 
 import messages from "@cucumber/messages";
+
+import split from "split";
 
 import { HOOK_FAILURE_EXPR } from "./constants";
 
@@ -35,9 +41,27 @@ import { createError } from "./helpers/error";
 
 import { assertIsString } from "./helpers/assertions";
 
-import { createHtmlStream, createJsonFormatter } from "./helpers/formatters";
+import {
+  createHtmlStream,
+  createJsonFormatter,
+  createPrettyFormatter,
+} from "./helpers/formatters";
+
+import { useColors } from "./helpers/colors";
 
 const resolve = memoize(origResolve);
+
+interface PrettyDisabled {
+  enabled: false;
+}
+
+interface PrettyEnabled {
+  enabled: true;
+  broadcaster: EventEmitter;
+  writable: stream.Writable;
+}
+
+type PrettyState = PrettyDisabled | PrettyEnabled;
 
 interface StateInitial {
   state: "initial";
@@ -45,21 +69,25 @@ interface StateInitial {
 
 interface StateBeforeSpec {
   state: "before-spec";
+  pretty: PrettyState;
 }
 
 interface StateReceivedSpecEnvelopes {
   state: "received-envelopes";
+  pretty: PrettyState;
   messages: messages.Envelope[];
 }
 
 interface StateTestStarted {
   state: "test-started";
+  pretty: PrettyState;
   messages: messages.Envelope[];
   testCaseStartedId: string;
 }
 
 interface StateStepStarted {
   state: "step-started";
+  pretty: PrettyState;
   messages: messages.Envelope[];
   testCaseStartedId: string;
   testStepStartedId: string;
@@ -67,12 +95,14 @@ interface StateStepStarted {
 
 interface StateStepFinished {
   state: "step-finished";
+  pretty: PrettyState;
   messages: messages.Envelope[];
   testCaseStartedId: string;
 }
 
 interface StateTestFinished {
   state: "test-finished";
+  pretty: PrettyState;
   messages: messages.Envelope[];
 }
 
@@ -95,6 +125,29 @@ let state: State = {
 };
 
 const isFeature = (spec: Cypress.Spec) => spec.name.endsWith(".feature");
+
+const end = (stream: stream.Writable) =>
+  new Promise<void>((resolve) => stream.end(resolve));
+
+const createPrettyStream = () => {
+  const line = split();
+
+  const indent = new stream.Transform({
+    objectMode: true,
+    transform(chunk, _, callback) {
+      callback(null, chunk.length === 0 ? "" : "  " + chunk);
+    },
+  });
+
+  const log = new stream.Writable({
+    write(chunk, _, callback) {
+      console.log(chunk.toString("utf8"));
+      callback();
+    },
+  });
+
+  return stream.compose(line, indent, log);
+};
 
 export async function beforeRunHandler(config: Cypress.PluginConfigOptions) {
   debug("beforeRunHandler()");
@@ -215,7 +268,7 @@ export async function afterRunHandler(config: Cypress.PluginConfigOptions) {
 
     const output = syncFs.createWriteStream(htmlPath);
 
-    await stream.pipeline(
+    await pipeline(
       input,
       new NdjsonToMessageStream(),
       createHtmlStream(),
@@ -236,16 +289,38 @@ export async function beforeSpecHandler(
 
   const preprocessor = await resolve(config, config.env, "/");
 
-  if (!preprocessor.messages.enabled) {
+  if (!preprocessor.messages.enabled && !preprocessor.pretty.enabled) {
     return;
   }
 
   switch (state.state) {
     case "initial":
     case "after-spec":
-      state = {
-        state: "before-spec",
-      };
+      {
+        if (preprocessor.pretty.enabled) {
+          const writable = createPrettyStream();
+
+          const eventBroadcaster = createPrettyFormatter(useColors(), (chunk) =>
+            writable.write(chunk)
+          );
+
+          state = {
+            state: "before-spec",
+            pretty: {
+              enabled: true,
+              broadcaster: eventBroadcaster,
+              writable,
+            },
+          };
+        } else {
+          state = {
+            state: "before-spec",
+            pretty: {
+              enabled: false,
+            },
+          };
+        }
+      }
       break;
     // This happens in case of visting a new domain, ref. https://github.com/cypress-io/cypress/issues/26300.
     // In this case, we want to disgard messages obtained in the current test and allow execution to continue
@@ -301,6 +376,10 @@ export async function afterSpecHandler(
     }
   }
 
+  if ("pretty" in state && state.pretty.enabled) {
+    await end(state.pretty.writable);
+  }
+
   state = {
     state: "after-spec",
   };
@@ -353,7 +432,7 @@ export async function afterScreenshotHandler(
   return details;
 }
 
-export function specEnvelopesHandler(
+export async function specEnvelopesHandler(
   config: Cypress.PluginConfigOptions,
   data: ITaskSpecEnvelopes
 ) {
@@ -379,8 +458,36 @@ export function specEnvelopesHandler(
           throw createError("Expected to find a testCaseStarted envelope");
         }
 
+        let pretty: PrettyState;
+
+        if (state.pretty.enabled) {
+          await end(state.pretty.writable);
+
+          console.log("  Reloading..");
+          console.log();
+
+          const writable = createPrettyStream();
+
+          const eventBroadcaster = createPrettyFormatter(useColors(), (chunk) =>
+            writable.write(chunk)
+          );
+
+          for (const message of data.messages) {
+            eventBroadcaster.emit("envelope", message);
+          }
+
+          pretty = {
+            enabled: true,
+            writable,
+            broadcaster: eventBroadcaster,
+          };
+        } else {
+          pretty = state.pretty;
+        }
+
         state = {
           state: "received-envelopes",
+          pretty,
           messages: state.messages.slice(0, iTestCaseStarted),
         };
       }
@@ -391,8 +498,15 @@ export function specEnvelopesHandler(
       );
   }
 
+  if (state.pretty.enabled) {
+    for (const message of data.messages) {
+      state.pretty.broadcaster.emit("envelope", message);
+    }
+  }
+
   state = {
     state: "received-envelopes",
+    pretty: state.pretty,
     messages: data.messages,
   };
 
@@ -419,8 +533,15 @@ export function testCaseStartedHandler(
       );
   }
 
+  if (state.pretty.enabled) {
+    state.pretty.broadcaster.emit("envelope", {
+      testCaseStarted: data,
+    });
+  }
+
   state = {
     state: "test-started",
+    pretty: state.pretty,
     messages: state.messages.concat({ testCaseStarted: data }),
     testCaseStartedId: data.id,
   };
@@ -451,8 +572,15 @@ export function testStepStartedHandler(
       );
   }
 
+  if (state.pretty.enabled) {
+    state.pretty.broadcaster.emit("envelope", {
+      testStepStarted: data,
+    });
+  }
+
   state = {
     state: "step-started",
+    pretty: state.pretty,
     messages: state.messages.concat({ testStepStarted: data }),
     testCaseStartedId: state.testCaseStartedId,
     testStepStartedId: data.testStepId,
@@ -480,8 +608,15 @@ export function testStepFinishedHandler(
       );
   }
 
+  if (state.pretty.enabled) {
+    state.pretty.broadcaster.emit("envelope", {
+      testStepFinished: data,
+    });
+  }
+
   state = {
     state: "step-finished",
+    pretty: state.pretty,
     messages: state.messages.concat({ testStepFinished: data }),
     testCaseStartedId: state.testCaseStartedId,
   };
@@ -509,8 +644,15 @@ export function testCaseFinishedHandler(
       );
   }
 
+  if (state.pretty.enabled) {
+    state.pretty.broadcaster.emit("envelope", {
+      testCaseFinished: data,
+    });
+  }
+
   state = {
     state: "test-finished",
+    pretty: state.pretty,
     messages: state.messages.concat({ testCaseFinished: data }),
   };
 

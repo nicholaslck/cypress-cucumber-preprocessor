@@ -80,6 +80,7 @@ Every configuration option has a similar key which can be use to override it, sh
 | `json.output`      | `jsonOutput`      | `cucumber-report.json`                   |
 | `html.enabled`     | `htmlEnabled`     | `true`, `false`                          |
 | `html.output`      | `htmlOutput`      | `cucumber-report.html`                   |
+| `pretty.enabled`   | `prettyEnabled`   | `true`, `false`                          |
 | `filterSpecs`      | `filterSpecs`     | `true`, `false`                          |
 | `omitFiltered`     | `omitFiltered`    | `true`, `false`                          |
 
