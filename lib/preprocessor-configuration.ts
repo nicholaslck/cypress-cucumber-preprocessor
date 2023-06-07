@@ -110,7 +110,7 @@ function validateUserConfigurationEntry(
     case "html": {
       if (typeof value !== "object" || value == null) {
         throw new Error(
-          `Expected an object (json), but got ${util.inspect(value)}`
+          `Expected an object (html), but got ${util.inspect(value)}`
         );
       }
       if (
