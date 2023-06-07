@@ -20,6 +20,7 @@ async function setupNodeEvents(on, config) {
 
 module.exports = defineConfig({
   e2e: {
+    baseUrl: "https://duckduckgo.com",
     specPattern: "**/*.feature",
     setupNodeEvents,
   },
