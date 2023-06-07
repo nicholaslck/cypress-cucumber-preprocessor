@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+Breaking changes:
+
+- TypeScript users that have previously been unable to upgrade `moduleResolution` to `node16`, and use the `paths` property as a workaround, must update their paths.
+
+  From this
+
+  ```
+  {
+    "compilerOptions": {
+      "paths": {
+        "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/bundler-utils/*"]
+      }
+    }
+  }
+  ```
+
+  To this
+
+  ```
+  {
+    "compilerOptions": {
+      "paths": {
+        "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/subpath-entrypoints/*"]
+      }
+    }
+  }
+  ```
+
 ## v17.2.1
 
 - Step hooks are logged using separate log groups, similar to how scenario hooks are logged.

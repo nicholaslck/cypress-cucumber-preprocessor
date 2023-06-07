@@ -68,7 +68,7 @@ Set `compilerOptions.moduleResolution` to `node16` in your `tsconfig.json`. User
 {
   "compilerOptions": {
     "paths": {
-      "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/bundler-utils/*"]
+      "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/subpath-entrypoints/*"]
     }
   }
 }

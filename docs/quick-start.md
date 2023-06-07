@@ -62,7 +62,7 @@ TypeScript users that are unable to upgrade `moduleResolution` to `node16`, can 
 {
   "compilerOptions": {
     "paths": {
-      "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/bundler-utils/*"]
+      "@badeball/cypress-cucumber-preprocessor/*": ["./node_modules/@badeball/cypress-cucumber-preprocessor/dist/subpath-entrypoints/*"]
     }
   }
 }

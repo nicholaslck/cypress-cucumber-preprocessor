@@ -27,7 +27,7 @@
       "types": "./dist/entrypoint-node.d.ts",
       "browser": "./dist/entrypoint-browser.js"
     },
-    "./*": "./dist/bundler-utils/*.js"
+    "./*": "./dist/subpath-entrypoints/*.js"
   },
   "files": [
     "dist/**/*.js",
