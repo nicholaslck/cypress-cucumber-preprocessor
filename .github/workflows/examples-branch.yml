@@ -38,11 +38,6 @@ jobs:
         with:
           path: ~/.npm
           key: npm-linux@latest
-      - name: Cache Cypress binaries
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-linux@latest
       - name: Change owner
         run: "chown root: ."
       - name: Dependencies
