@@ -9,6 +9,10 @@ defaults:
   run:
     shell: bash
 
+env:
+  NPM_CONFIG_CACHE: /root/.cache/npm
+  CYPRESS_CACHE_FOLDER: /root/.cache/cypress
+
 jobs:
   find-examples:
     runs-on: ubuntu-20.04
@@ -36,7 +40,7 @@ jobs:
       - name: Cache NPM modules
         uses: actions/cache@v3
         with:
-          path: ~/.npm
+          path: ${{ env.NPM_CONFIG_CACHE }}
           key: npm-linux@latest
       - name: Change owner
         run: "chown root: ."
@@ -83,12 +87,12 @@ jobs:
       - name: Cache NPM modules
         uses: actions/cache@v3
         with:
-          path: ~/.npm
+          path: ${{ env.NPM_CONFIG_CACHE }}
           key: npm@${{ matrix.example }}
       - name: Cache Cypress binaries
         uses: actions/cache@v3
         with:
-          path: ~/.cache/Cypress
+          path: ${{ env.CYPRESS_CACHE_FOLDER }}
           key: cypress-examples
       - name: Retrieve dirty build
         uses: actions/download-artifact@v3

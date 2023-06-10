@@ -2,6 +2,10 @@ name: Build
 
 on: [push, pull_request]
 
+env:
+  NPM_CONFIG_CACHE: /root/.cache/npm
+  CYPRESS_CACHE_FOLDER: /root/.cache/cypress
+
 jobs:
   prepare-versions:
     runs-on: ubuntu-20.04
@@ -33,12 +37,12 @@ jobs:
       - name: Cache NPM modules
         uses: actions/cache@v3
         with:
-          path: ~/.npm
+          path: ${{ env.NPM_CONFIG_CACHE }}
           key: npm-linux@${{ matrix.cypress-version }}
       - name: Cache Cypress binaries
         uses: actions/cache@v3
         with:
-          path: ~/.cache/Cypress
+          path: ${{ env.CYPRESS_CACHE_FOLDER }}
           key: cypress-linux@${{ matrix.cypress-version }}
       - name: Change owner
         run: "chown root: ."
