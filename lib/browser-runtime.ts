@@ -668,8 +668,12 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
                 testStepId,
                 testCaseStartedId,
                 testStepResult: {
-                  status: messages.TestStepResultStatus.FAILED,
-                  message: this.currentTest?.err?.message,
+                  status: error.includes(
+                    "Multiple matching step definitions for"
+                  )
+                    ? messages.TestStepResultStatus.AMBIGUOUS
+                    : messages.TestStepResultStatus.FAILED,
+                  message: error,
                   duration: duration(
                     assertAndReturn(
                       currentStepStartedAt,
