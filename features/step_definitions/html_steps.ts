@@ -64,6 +64,30 @@ Then(
   }
 );
 
+Then(
+  "the HTML should display {int}% passed scenarios",
+  async function (n: number) {
+    const dom = await JSDOM.fromFile(
+      path.join(this.tmpDir, "cucumber-report.html"),
+      { runScripts: "dangerously" }
+    );
+
+    const dd = assertAndReturn(
+      Array.from(dom.window.document.querySelectorAll("dd")).find(
+        (el) => el.textContent && /\d+% passed/.test(el.textContent)
+      ),
+      "Expected to find a 'XX% passed' dd"
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const actual = parseInt(dd.textContent!, 10);
+
+    console.log({ actual });
+
+    assert.equal(actual, n);
+  }
+);
+
 Then("the report should have an image attachment", async function () {
   const dom = await JSDOM.fromFile(
     path.join(this.tmpDir, "cucumber-report.html"),

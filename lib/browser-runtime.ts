@@ -67,11 +67,14 @@ import { IStepHookParameter } from "./public-member-types";
 
 type Node = ReturnType<typeof parse>;
 
+type TestStepIds = Map<string, Map<string, string>>;
+
 interface CompositionContext {
   registry: Registry;
   newId: messages.IdGenerator.NewId;
   gherkinDocument: messages.GherkinDocument;
   astIdsMap: ReturnType<typeof createAstIdMap>;
+  testStepIds: TestStepIds;
   pickles: messages.Pickle[];
   specEnvelopes: messages.Envelope[];
   testFilter: Node;
@@ -216,6 +219,49 @@ function collectExampleIds(examples: readonly messages.Examples[]) {
       );
     })
     .reduce((acum, el) => acum.concat(el), []);
+}
+
+function createTestStepId(options: {
+  testStepIds: TestStepIds;
+  newId: messages.IdGenerator.NewId;
+  pickleId: string;
+  hookIdOrPickleStepId: string;
+}) {
+  const { testStepIds, newId, pickleId, hookIdOrPickleStepId } = options;
+
+  const testStepId = newId();
+
+  let pickleStepIds: Map<string, string>;
+
+  if (testStepIds.has(pickleId)) {
+    // See https://github.com/microsoft/TypeScript/issues/9619.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    pickleStepIds = testStepIds.get(pickleId)!;
+  } else {
+    pickleStepIds = new Map();
+    testStepIds.set(pickleId, pickleStepIds);
+  }
+
+  pickleStepIds.set(hookIdOrPickleStepId, testStepId);
+
+  return testStepId;
+}
+
+function getTestStepId(options: {
+  context: CompositionContext;
+  pickleId: string;
+  hookIdOrPickleStepId: string;
+}) {
+  const { context, pickleId, hookIdOrPickleStepId } = options;
+
+  return assertAndReturn(
+    assertAndReturn(
+      context.testStepIds.get(pickleId),
+      "Expected to find test step IDs for pickle = " + pickleId
+    ).get(hookIdOrPickleStepId),
+    "Expected to find test step ID for hook or pickleStep = " +
+      hookIdOrPickleStepId
+  );
 }
 
 function createFeature(context: CompositionContext, feature: messages.Feature) {
@@ -381,6 +427,12 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
       if (step.hook) {
         const hook = step.hook;
 
+        const testStepId = getTestStepId({
+          context,
+          pickleId: pickle.id,
+          hookIdOrPickleStepId: hook.id,
+        });
+
         cy.then(() => {
           delete window.testState.pickleStep;
 
@@ -389,7 +441,7 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
           internalProperties.currentStepStartedAt = start;
 
           taskTestStepStarted(context, {
-            testStepId: hook.id,
+            testStepId,
             testCaseStartedId,
             timestamp: start,
           });
@@ -409,7 +461,7 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
             const end = createTimestamp();
 
             taskTestStepFinished(context, {
-              testStepId: hook.id,
+              testStepId,
               testCaseStartedId,
               testStepResult: {
                 status: messages.TestStepResultStatus.PASSED,
@@ -422,6 +474,12 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
           });
       } else if (step.pickleStep) {
         const pickleStep = step.pickleStep;
+
+        const testStepId = getTestStepId({
+          context,
+          pickleId: pickle.id,
+          hookIdOrPickleStepId: pickleStep.id,
+        });
 
         const text = assertAndReturn(
           pickleStep.text,
@@ -454,7 +512,7 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
           internalProperties.currentStepStartedAt = start;
 
           taskTestStepStarted(context, {
-            testStepId: pickleStep.id,
+            testStepId,
             testCaseStartedId,
             timestamp: start,
           });
@@ -469,7 +527,7 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
               pickleStep,
               gherkinDocument,
               testCaseStartedId,
-              testStepId: pickleStep.id,
+              testStepId,
             };
 
             const beforeHooksChain = beforeStepHooks.reduce(
@@ -533,7 +591,7 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
 
             if (result === "pending") {
               taskTestStepFinished(context, {
-                testStepId: pickleStep.id,
+                testStepId,
                 testCaseStartedId,
                 testStepResult: {
                   status: messages.TestStepResultStatus.PENDING,
@@ -545,10 +603,16 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
               remainingSteps.shift();
 
               for (const skippedStep of remainingSteps) {
-                const testStepId = assertAndReturn(
+                const hookIdOrPickleStepId = assertAndReturn(
                   skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
                   "Expected a step to either be a hook or a pickleStep"
                 );
+
+                const testStepId = getTestStepId({
+                  context,
+                  pickleId: pickle.id,
+                  hookIdOrPickleStepId,
+                });
 
                 taskTestStepStarted(context, {
                   testStepId,
@@ -577,7 +641,7 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
               cy.then(() => this.skip());
             } else {
               taskTestStepFinished(context, {
-                testStepId: pickleStep.id,
+                testStepId,
                 testCaseStartedId,
                 testStepResult: {
                   status: messages.TestStepResultStatus.PASSED,
@@ -648,7 +712,7 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
 
   const properties = retrieveInternalSpecProperties();
 
-  const { testCaseStartedId, currentStepStartedAt, remainingSteps } =
+  const { pickle, testCaseStartedId, currentStepStartedAt, remainingSteps } =
     properties;
 
   const endTimestamp = createTimestamp();
@@ -669,10 +733,16 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
         "Expected there to be a remaining step"
       );
 
-      const testStepId = assertAndReturn(
+      const hookIdOrPickleStepId = assertAndReturn(
         failedStep.hook?.id ?? failedStep.pickleStep?.id,
         "Expected a step to either be a hook or a pickleStep"
       );
+
+      const testStepId = getTestStepId({
+        context,
+        pickleId: pickle.id,
+        hookIdOrPickleStepId,
+      });
 
       const failedTestStepFinished: messages.TestStepFinished = error.includes(
         "Step implementation missing"
@@ -711,10 +781,16 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
       taskTestStepFinished(context, failedTestStepFinished);
 
       for (const skippedStep of remainingSteps) {
-        const testStepId = assertAndReturn(
+        const hookIdOrPickleStepId = assertAndReturn(
           skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
           "Expected a step to either be a hook or a pickleStep"
         );
+
+        const testStepId = getTestStepId({
+          context,
+          pickleId: pickle.id,
+          hookIdOrPickleStepId,
+        });
 
         taskTestStepStarted(context, {
           testStepId,
@@ -737,10 +813,16 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
       }
     } else {
       for (const skippedStep of remainingSteps) {
-        const testStepId = assertAndReturn(
+        const hookIdOrPickleStepId = assertAndReturn(
           skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
           "Expected a step to either be a hook or a pickleStep"
         );
+
+        const testStepId = getTestStepId({
+          context,
+          pickleId: pickle.id,
+          hookIdOrPickleStepId,
+        });
 
         taskTestStepStarted(context, {
           testStepId,
@@ -835,6 +917,8 @@ export default function createTests(
       };
     });
 
+  const testStepIds: TestStepIds = new Map();
+
   const testCases: messages.TestCase[] = pickles
     .filter((pickle) => {
       return !omitFiltered || !shouldSkipPickle(testFilter, pickle);
@@ -846,7 +930,12 @@ export default function createTests(
 
       const hooksToStep = (hook: IHook): messages.TestStep => {
         return {
-          id: hook.id,
+          id: createTestStepId({
+            testStepIds,
+            newId,
+            pickleId: pickle.id,
+            hookIdOrPickleStepId: hook.id,
+          }),
           hookId: hook.id,
         };
       };
@@ -859,7 +948,12 @@ export default function createTests(
           .map((stepDefinition) => stepDefinition.id);
 
         return {
-          id: pickleStep.id,
+          id: createTestStepId({
+            testStepIds,
+            newId,
+            pickleId: pickle.id,
+            hookIdOrPickleStepId: pickleStep.id,
+          }),
           pickleStepId: pickleStep.id,
           stepDefinitionIds,
         };
@@ -926,6 +1020,7 @@ export default function createTests(
     newId,
     gherkinDocument,
     astIdsMap: createAstIdMap(gherkinDocument),
+    testStepIds,
     pickles,
     specEnvelopes,
     testFilter,
