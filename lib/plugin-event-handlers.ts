@@ -361,7 +361,7 @@ export async function afterSpecHandler(
     if (wasRemainingSkipped) {
       console.log(
         chalk.yellow(
-          `  Hook failures can't be represented in messages / JSON reports, thus none is created for ${spec.relative}.`
+          `  Hook failures can't be represented in any reports (messages / json / html), thus none is created for ${spec.relative}.`
         )
       );
     } else if ("messages" in state) {

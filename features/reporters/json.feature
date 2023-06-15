@@ -356,7 +356,7 @@ Feature: JSON formatter
       Then it fails
       And the output should contain
         """
-        Hook failures can't be represented in messages / JSON reports, thus none is created for cypress/e2e/a.feature.
+        Hook failures can't be represented in any reports (messages / json / html), thus none is created for cypress/e2e/a.feature.
         """
       And the JSON report shouldn't contain any specs
 
@@ -382,7 +382,7 @@ Feature: JSON formatter
       Then it fails
       And the output should contain
         """
-        Hook failures can't be represented in messages / JSON reports, thus none is created for cypress/e2e/a.feature.
+        Hook failures can't be represented in any reports (messages / json / html), thus none is created for cypress/e2e/a.feature.
         """
       And the JSON report shouldn't contain any specs
 
@@ -408,7 +408,7 @@ Feature: JSON formatter
       Then it fails
       And the output should contain
         """
-        Hook failures can't be represented in messages / JSON reports, thus none is created for cypress/e2e/a.feature.
+        Hook failures can't be represented in any reports (messages / json / html), thus none is created for cypress/e2e/a.feature.
         """
       And the JSON report shouldn't contain any specs
 
@@ -434,6 +434,6 @@ Feature: JSON formatter
       Then it fails
       And the output should contain
         """
-        Hook failures can't be represented in messages / JSON reports, thus none is created for cypress/e2e/a.feature.
+        Hook failures can't be represented in any reports (messages / json / html), thus none is created for cypress/e2e/a.feature.
         """
       And the JSON report shouldn't contain any specs
