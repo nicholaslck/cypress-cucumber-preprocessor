@@ -11,3 +11,5 @@ HTML reports are powered by [`@cucumber/html-formatter`](https://github.com/cucu
   }
 }
 ```
+
+The report is outputted to `cucumber-report.html` in the project directory, but can be configured through the `html.output` property.
