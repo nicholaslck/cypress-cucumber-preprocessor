@@ -13,3 +13,5 @@ Messages reports can be enabled using the `messages.enabled` property. The prepr
   }
 }
 ```
+
+The report is outputted to `cucumber-messages.ndjson` in the project directory, but can be configured through the `messages.output` property.
