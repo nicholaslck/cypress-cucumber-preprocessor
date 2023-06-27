@@ -15,6 +15,7 @@
   * [I get `Cannot find module '@badeball/cypress-cucumber-preprocessor/esbuild'`](#i-get-cannot-find-module-badeballcypress-cucumber-preprocessoresbuild)
 * On event handlers
   * [My JSON report isn't generated](#my-json-report-isnt-generated)
+  * [I get `Unexpected state in <state-handler>: <state>`](#i-get-unexpected-state-in-state-handler-state)
 * Feature deprecations
   * [Why is `cypress-tags` missing?](#why-is-cypress-tags-missing)
   * [The members `And(..)` and `But(..)` are missing](#function-members-and-and-but-are-missing)
@@ -78,6 +79,10 @@ Set `compilerOptions.moduleResolution` to `node16` in your `tsconfig.json`. User
 ## My JSON report isn't generated
 
 You may have stumbled upon a configuration caveat (see [docs/configuration.md: Caveats / Debugging](configuration.md#caveats--debugging)) or are overriding some of the plugin's own event handlers (see [docs/event-handlers.md: On event handlers](https://github.com/badeball/cypress-cucumber-preprocessor/blob/master/docs/event-handlers.md)).
+
+## I get `Unexpected state in <state-handler>: <state>`
+
+You might be overriding some of the plugin's own event handlers (see [docs/event-handlers.md: On event handlers](https://github.com/badeball/cypress-cucumber-preprocessor/blob/master/docs/event-handlers.md)).
 
 ## Why is `cypress-tags` missing?
 
