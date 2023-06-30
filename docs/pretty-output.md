@@ -28,6 +28,8 @@ $ cypress run --reporter @badeball/cypress-cucumber-preprocessor/dist/subpath-en
 
 The reason for having to use `require.resolve` or a needlessly cumbersome path, is because a) this package's use of [Conditional Exports](https://nodejs.org/api/packages.html#conditional-exports) and b) Cypress circumventing the built-in resolve mechanism in Node when loading reporters. This disables the use of [PnP](https://github.com/cypress-io/cypress/issues/18922), among other things, including making this a bit more difficult than it has to be.
 
+> :pushpin: Combine pretty output with Cypress' own `-q / --quiet` option to obtain particulararly terse output as seen in the animation above.
+
 ## Usage with `cypress-multi-reporters`
 
 If you want to use pretty output with `cypress-multi-reporters`, presumably because you are using multiple reporters, then you **also** need to explicitly turn on the `pretty.enabled` property. The preprocessor uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig), which means you can place configuration options in EG. `.cypress-cucumber-preprocessorrc.json` or `package.json`. An example configuration is shown below.
