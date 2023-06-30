@@ -337,3 +337,41 @@ Feature: pretty output
             Given a step
             ? undefined
       """
+
+    Scenario: retried scenario
+      Given additional Cypress configuration
+        """
+        {
+          "retries": 1
+        }
+        """
+      And a file named "cypress/e2e/a.feature" with:
+        """
+        Feature: a feature
+          Scenario: a scenario
+            Given a step
+        """
+      And a file named "cypress/support/step_definitions/steps.js" with:
+        """
+        const { Given } = require("@badeball/cypress-cucumber-preprocessor");
+        let attempt = 0;
+        Given("a step", () => {
+          if (attempt++ === 0) {
+            throw "some error";
+          }
+        });
+        """
+      When I run cypress
+      Then it passes
+      And the output should contain
+      """
+        Feature: a feature # cypress/e2e/a.feature:1
+
+          Scenario: a scenario # cypress/e2e/a.feature:2
+            Given a step
+            ✖ failed
+              some error
+
+          Scenario: a scenario # cypress/e2e/a.feature:2
+            Given a step
+      """
