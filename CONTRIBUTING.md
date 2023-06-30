@@ -41,6 +41,13 @@ Guidelines for bug reports:
 5. **Format blocks of code** &mdash; use [markdown][format-code] to properly
    format blocks of code for maximum readability.
 
+6. **Attach debug information** &mdash; enable debug output by running Cypress
+   with the following environment variable.
+
+   ```
+   $ DEBUG=cypress:electron,cypress-configuration,cypress-cucumber-preprocessor cypress run
+   ```
+
 A good bug report shouldn't leave others needing to chase you up for more
 information. Please try to be as detailed as possible in your report. What is
 your environment? What steps will reproduce the issue? What browser(s) and OS
