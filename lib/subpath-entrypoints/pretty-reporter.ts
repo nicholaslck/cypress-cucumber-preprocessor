@@ -1,6 +1,6 @@
 import Mocha from "mocha";
 
-export default class CucumberReporter extends Mocha.reporters.Base {
+export = class CucumberReporter extends Mocha.reporters.Base {
   constructor(runner: Mocha.Runner, options?: Mocha.MochaOptions) {
     super(runner, options);
 
@@ -10,6 +10,4 @@ export default class CucumberReporter extends Mocha.reporters.Base {
 
     runner.once(Mocha.Runner.constants.EVENT_RUN_END, this.epilogue.bind(this));
   }
-}
-
-module.exports = CucumberReporter;
+};
