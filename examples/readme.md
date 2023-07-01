@@ -2,6 +2,10 @@
 
 These are the *only* official examples at the time of writing. Any other example you come across is **not official** and might be severely outdated by now.
 
+## Usage with other plugins
+
+If you're using the preprocessor _with other plugins_, please read [docs/event-handlers.md: On event handlers](event-handlers.md) **carefully**.
+
 ## E2E testing
 
 The examples illustrates using each bundler in each language flavor.

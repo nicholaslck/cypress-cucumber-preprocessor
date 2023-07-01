@@ -68,6 +68,10 @@ TypeScript users that are unable to upgrade `moduleResolution` to `node16`, can 
 }
 ```
 
+# Usage with other plugins
+
+If you're using the preprocessor _with other plugins_, please read [docs/event-handlers.md: On event handlers](event-handlers.md) **carefully**.
+
 # Write a test
 
 Write Gherkin documents and add a file for type definitions with a corresponding name (read more about how step definitions are resolved in [docs/step-definitions.md](step-definitions.md)). Reading [docs/cucumber-basics.md](cucumber-basics.md) is highly recommended.
