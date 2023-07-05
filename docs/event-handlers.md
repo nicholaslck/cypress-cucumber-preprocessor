@@ -16,6 +16,16 @@ These are the event this plugin will subscribe to:
 
 For example, if you specify a handler for `after:screenshot` and override this plugin's handler, then screenshots will no longer be automatically added to JSON reports. This is just one type of issue that can arise by overriding event handlers.
 
+The following plugins (non-exhaustive) are known to also define event handlers.
+
+- [@bahmutov/cypress-code-coverage][@bahmutov/cypress-code-coverage]
+- [cypress-allure-plugin][cypress-allure-plugin]
+- [cypress-cloud][cypress-cloud]
+- [cypress-testrail][cypress-testrail]
+- [cypress-xray-plugin][cypress-xray-plugin]
+
+If you use any of these plugins, then you need to consider [cypress-on-fix][cypress-on-fix], otherwise your mileage may vary.
+
 ## Workaround (1 / 2)
 
 Since its inception, [cypress-on-fix][cypress-on-fix] has rendered the original workaround (shown below) virtually obsolete. Using cypress-on-fix is now the preferred and recommended method for combining multiple plugins in a Cypress project. Consult its documentation for how to integrate cypress-on-fix into your project.
@@ -94,4 +104,9 @@ export default defineConfig({
 });
 ```
 
+[@bahmutov/cypress-code-coverage]: https://github.com/bahmutov/cypress-code-coverage
+[cypress-allure-plugin]: https://github.com/Shelex/cypress-allure-plugin
+[cypress-cloud]: https://github.com/currents-dev/cypress-cloud
+[cypress-testrail]: https://github.com/boxblinkracer/cypress-testrail
+[cypress-xray-plugin]: https://github.com/Qytera-Gmbh/cypress-xray-plugin
 [cypress-on-fix]: https://github.com/bahmutov/cypress-on-fix
