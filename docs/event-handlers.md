@@ -18,7 +18,11 @@ For example, if you specify a handler for `after:screenshot` and override this p
 
 ## Workaround (1 / 2)
 
-You can through options, obtain more fine-grained control over event behavior and invoke your own code alongside this plugin, as shown below.
+Since its inception, [cypress-on-fix][cypress-on-fix] has rendered the original workaround (shown below) virtually obsolete. Using cypress-on-fix is now the preferred and recommended method for combining multiple plugins in a Cypress project. Consult its documentation for how to integrate cypress-on-fix into your project.
+
+## Workaround (2 / 2)
+
+You can through options, obtain more fine-grained control over event behavior and invoke your own code alongside this plugin, as shown below. As explained above, [cypress-on-fix][cypress-on-fix] has rendered this method virtually obsolete.
 
 ```js
 import { defineConfig } from "cypress";
@@ -89,9 +93,5 @@ export default defineConfig({
   },
 });
 ```
-
-## Workaround (2 / 2)
-
-Alternatively, you can use [cypress-on-fix][cypress-on-fix]. This removes the need for any of the above altogether and works with any plugins (presumably).
 
 [cypress-on-fix]: https://github.com/bahmutov/cypress-on-fix
