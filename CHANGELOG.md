@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Add support for skipped steps, fixes [#1053](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1053).
+
 ## v18.0.1
 
 - Give each TestStep (from `@cucumber/messages`) a unique ID, fixes [#1034](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1034).

@@ -589,16 +589,28 @@ function createPickle(context: CompositionContext, pickle: messages.Pickle) {
           .then(({ start, result }) => {
             const end = createTimestamp();
 
-            if (result === "pending") {
-              taskTestStepFinished(context, {
-                testStepId,
-                testCaseStartedId,
-                testStepResult: {
-                  status: messages.TestStepResultStatus.PENDING,
-                  duration: duration(start, end),
-                },
-                timestamp: end,
-              });
+            if (result === "pending" || result === "skipped") {
+              if (result === "pending") {
+                taskTestStepFinished(context, {
+                  testStepId,
+                  testCaseStartedId,
+                  testStepResult: {
+                    status: messages.TestStepResultStatus.PENDING,
+                    duration: duration(start, end),
+                  },
+                  timestamp: end,
+                });
+              } else {
+                taskTestStepFinished(context, {
+                  testStepId,
+                  testCaseStartedId,
+                  testStepResult: {
+                    status: messages.TestStepResultStatus.SKIPPED,
+                    duration: duration(start, end),
+                  },
+                  timestamp: end,
+                });
+              }
 
               remainingSteps.shift();
 
