@@ -823,10 +823,70 @@ function afterEachHandler(this: Mocha.Context, context: CompositionContext) {
           timestamp: endTimestamp,
         });
       }
-    } else {
-      for (const skippedStep of remainingSteps) {
+    } else if (this.currentTest?.state === "pending") {
+      if (currentStepStartedAt) {
+        const skippedStep = assertAndReturn(
+          remainingSteps.shift(),
+          "Expected there to be a remaining step"
+        );
+
         const hookIdOrPickleStepId = assertAndReturn(
           skippedStep.hook?.id ?? skippedStep.pickleStep?.id,
+          "Expected a step to either be a hook or a pickleStep"
+        );
+
+        const testStepId = getTestStepId({
+          context,
+          pickleId: pickle.id,
+          hookIdOrPickleStepId,
+        });
+
+        taskTestStepFinished(context, {
+          testStepId,
+          testCaseStartedId,
+          testStepResult: {
+            status: messages.TestStepResultStatus.SKIPPED,
+            duration: duration(currentStepStartedAt, endTimestamp),
+          },
+          timestamp: endTimestamp,
+        });
+      }
+
+      for (const remainingStep of remainingSteps) {
+        const hookIdOrPickleStepId = assertAndReturn(
+          remainingStep.hook?.id ?? remainingStep.pickleStep?.id,
+          "Expected a step to either be a hook or a pickleStep"
+        );
+
+        const testStepId = getTestStepId({
+          context,
+          pickleId: pickle.id,
+          hookIdOrPickleStepId,
+        });
+
+        taskTestStepStarted(context, {
+          testStepId,
+          testCaseStartedId,
+          timestamp: endTimestamp,
+        });
+
+        taskTestStepFinished(context, {
+          testStepId,
+          testCaseStartedId,
+          testStepResult: {
+            status: messages.TestStepResultStatus.SKIPPED,
+            duration: {
+              seconds: 0,
+              nanos: 0,
+            },
+          },
+          timestamp: endTimestamp,
+        });
+      }
+    } else {
+      for (const remainingStep of remainingSteps) {
+        const hookIdOrPickleStepId = assertAndReturn(
+          remainingStep.hook?.id ?? remainingStep.pickleStep?.id,
           "Expected a step to either be a hook or a pickleStep"
         );
 

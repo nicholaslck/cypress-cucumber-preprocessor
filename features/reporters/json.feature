@@ -140,7 +140,7 @@ Feature: JSON formatter
       Then it passes
       And there should be a JSON output similar to "fixtures/pending-steps.json"
 
-    Scenario: skipped step
+    Scenario: skipped step through return value
       Given a file named "cypress/e2e/a.feature" with:
         """
         Feature: a feature
@@ -155,6 +155,28 @@ Feature: JSON formatter
         Given("a preceding step", function () {})
         Given("a skipped step", function () {
           return "skipped";
+        });
+        Given("a succeeding step", function () {})
+        """
+      When I run cypress
+      Then it passes
+      And there should be a JSON output similar to "fixtures/skipped-steps.json"
+
+    Scenario: skipped step through method invocation
+      Given a file named "cypress/e2e/a.feature" with:
+        """
+        Feature: a feature
+          Scenario: a scenario
+            Given a preceding step
+            And a skipped step
+            And a succeeding step
+        """
+      And a file named "cypress/support/step_definitions/steps.js" with:
+        """
+        const { Given } = require("@badeball/cypress-cucumber-preprocessor");
+        Given("a preceding step", function () {})
+        Given("a skipped step", function () {
+          this.skip();
         });
         Given("a succeeding step", function () {})
         """

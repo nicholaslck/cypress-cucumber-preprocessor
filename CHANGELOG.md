@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 - Add support for skipped steps, fixes [#1053](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1053).
 
+- Handle use of `this.skip()` correctly in reports, fixes [#1054](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1054).
+
 ## v18.0.1
 
 - Give each TestStep (from `@cucumber/messages`) a unique ID, fixes [#1034](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1034).
