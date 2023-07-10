@@ -13,6 +13,19 @@
             "arguments": [],
             "keyword": "Given ",
             "line": 3,
+            "name": "a preceding step",
+            "match": {
+              "location": "not available:0"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 4,
             "name": "a failing step",
             "match": {
               "location": "not available:0"
@@ -26,8 +39,8 @@
           {
             "arguments": [],
             "keyword": "And ",
-            "line": 4,
-            "name": "another step",
+            "line": 5,
+            "name": "a succeeding step",
             "match": {
               "location": "not available:0"
             },

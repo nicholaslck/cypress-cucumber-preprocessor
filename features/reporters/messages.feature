@@ -82,16 +82,18 @@ Feature: messages report
         """
         Feature: a feature
           Scenario: a scenario
-            Given a failing step
-            And another step
+            Given a preceding step
+            And a failing step
+            And a succeeding step
         """
       And a file named "cypress/support/step_definitions/steps.js" with:
         """
         const { Given } = require("@badeball/cypress-cucumber-preprocessor");
+        Given("a preceding step", function () {})
         Given("a failing step", function() {
           throw "some error"
         })
-        Given("another step", function () {})
+        Given("a succeeding step", function () {})
         """
       When I run cypress
       Then it fails
@@ -102,13 +104,15 @@ Feature: messages report
         """
         Feature: a feature
           Scenario: a scenario
-            Given an undefined step
-            And another step
+            Given a preceding step
+            And an undefined step
+            And a succeeding step
         """
       And a file named "cypress/support/step_definitions/steps.js" with:
         """
         const { Given } = require("@badeball/cypress-cucumber-preprocessor");
-        Given("a defined step", function () {})
+        Given("a preceding step", function () {})
+        Given("a succeeding step", function () {})
         """
       When I run cypress
       Then it fails
@@ -119,20 +123,18 @@ Feature: messages report
         """
         Feature: a feature
           Scenario: a scenario
-            Given a pending step
-            And another pending step
-            And an implemented step
+            Given a preceding step
+            And a pending step
+            And a succeeding step
         """
       And a file named "cypress/support/step_definitions/steps.js" with:
         """
         const { Given } = require("@badeball/cypress-cucumber-preprocessor");
+        Given("a preceding step", function () {})
         Given("a pending step", function () {
           return "pending";
         });
-        Given("another pending step", function () {
-          return "pending";
-        });
-        Given("an implemented step", () => {});
+        Given("a succeeding step", function () {})
         """
       When I run cypress
       Then it passes
@@ -247,17 +249,21 @@ Feature: messages report
         """
         Feature: a feature
           Scenario: a scenario
-            Given a failing step
-            And another step
+            Given a preceding step
+            And a failing step
+            And a succeeding step
         """
       And a file named "cypress/support/step_definitions/steps.js" with:
         """
         const { BeforeStep, Given } = require("@badeball/cypress-cucumber-preprocessor");
-        BeforeStep(function() {
-          throw "some error"
+        BeforeStep(function({ pickleStep }) {
+          if (pickleStep.text === "a failing step") {
+            throw "some error"
+          }
         })
+        Given("a preceding step", function () {})
         Given("a failing step", function() {})
-        Given("another step", function () {})
+        Given("a succeeding step", function () {})
         """
       When I run cypress
       Then it fails
@@ -268,17 +274,21 @@ Feature: messages report
         """
         Feature: a feature
           Scenario: a scenario
-            Given a failing step
-            And another step
+            Given a preceding step
+            And a failing step
+            And a succeeding step
         """
       And a file named "cypress/support/step_definitions/steps.js" with:
         """
         const { AfterStep, Given } = require("@badeball/cypress-cucumber-preprocessor");
-        AfterStep(function() {
-          throw "some error"
+        AfterStep(function({ pickleStep }) {
+          if (pickleStep.text === "a failing step") {
+            throw "some error"
+          }
         })
+        Given("a preceding step", function () {})
         Given("a failing step", function() {})
-        Given("another step", function () {})
+        Given("a succeeding step", function () {})
         """
       When I run cypress
       Then it fails
