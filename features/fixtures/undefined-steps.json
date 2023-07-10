@@ -35,8 +35,8 @@
       }
     ],
     "id": "a-feature",
-    "keyword": "Feature",
     "line": 1,
+    "keyword": "Feature",
     "name": "a feature",
     "tags": [],
     "uri": "cypress/e2e/a.feature"

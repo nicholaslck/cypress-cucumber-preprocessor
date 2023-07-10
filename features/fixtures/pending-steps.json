@@ -14,12 +14,12 @@
             "keyword": "Given ",
             "line": 3,
             "name": "a pending step",
-            "result": {
-              "duration": 0,
-              "status": "pending"
-            },
             "match": {
               "location": "not available:0"
+            },
+            "result": {
+              "status": "pending",
+              "duration": 0
             }
           },
           {
@@ -27,12 +27,12 @@
             "keyword": "And ",
             "line": 4,
             "name": "another pending step",
+            "match": {
+              "location": "not available:0"
+            },
             "result": {
               "status": "skipped",
               "duration": 0
-            },
-            "match": {
-              "location": "not available:0"
             }
           },
           {
@@ -40,12 +40,12 @@
             "keyword": "And ",
             "line": 5,
             "name": "an implemented step",
+            "match": {
+              "location": "not available:0"
+            },
             "result": {
               "status": "skipped",
               "duration": 0
-            },
-            "match": {
-              "location": "not available:0"
             }
           }
         ],
@@ -54,8 +54,8 @@
       }
     ],
     "id": "a-feature",
-    "keyword": "Feature",
     "line": 1,
+    "keyword": "Feature",
     "name": "a feature",
     "tags": [],
     "uri": "cypress/e2e/a.feature"

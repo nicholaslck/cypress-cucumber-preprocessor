@@ -23,12 +23,12 @@
             "keyword": "Given ",
             "line": 3,
             "name": "a step",
+            "match": {
+              "location": "not available:0"
+            },
             "result": {
               "status": "skipped",
               "duration": 0
-            },
-            "match": {
-              "location": "not available:0"
             }
           }
         ],
@@ -37,8 +37,8 @@
       }
     ],
     "id": "a-feature",
-    "keyword": "Feature",
     "line": 1,
+    "keyword": "Feature",
     "name": "a feature",
     "tags": [],
     "uri": "cypress/e2e/a.feature"

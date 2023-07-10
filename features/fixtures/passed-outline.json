@@ -14,12 +14,12 @@
             "keyword": "Given ",
             "line": 3,
             "name": "a step",
-            "result": {
-              "duration": 0,
-              "status": "passed"
-            },
             "match": {
               "location": "not available:0"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 0
             }
           }
         ],
@@ -38,12 +38,12 @@
             "keyword": "Given ",
             "line": 3,
             "name": "a step",
-            "result": {
-              "duration": 0,
-              "status": "passed"
-            },
             "match": {
               "location": "not available:0"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 0
             }
           }
         ],
@@ -52,8 +52,8 @@
       }
     ],
     "id": "a-feature",
-    "keyword": "Feature",
     "line": 1,
+    "keyword": "Feature",
     "name": "a feature",
     "tags": [],
     "uri": "cypress/e2e/a.feature"
