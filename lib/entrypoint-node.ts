@@ -9,11 +9,6 @@ import {
 
 export { resolve as resolvePreprocessorConfiguration } from "./preprocessor-configuration";
 
-export {
-  getStepDefinitionPatterns,
-  getStepDefinitionPaths,
-} from "./step-definitions";
-
 export { default as addCucumberPreprocessorPlugin } from "./add-cucumber-preprocessor-plugin";
 
 export {
