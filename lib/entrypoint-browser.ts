@@ -165,7 +165,7 @@ function isFeature() {
   return Cypress.env(INTERNAL_SPEC_PROPERTIES) != null;
 }
 
-export const NOT_FEATURE_ERROR =
+const NOT_FEATURE_ERROR =
   "Expected to find internal properties, but didn't. This is likely because you're calling doesFeatureMatch() in a non-feature spec. Use doesFeatureMatch() in combination with isFeature() if you have both feature and non-feature specs";
 
 function doesFeatureMatch(expression: string) {

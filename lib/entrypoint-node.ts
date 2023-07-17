@@ -27,8 +27,6 @@ function createUnimplemented() {
   return new Error("Cucumber methods aren't available in a node environment");
 }
 
-export { NOT_FEATURE_ERROR } from "./entrypoint-browser";
-
 export function isFeature(): boolean {
   throw createUnimplemented();
 }
