@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - Handle use of `this.skip()` correctly in reports, fixes [#1054](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1054).
 
+- Export type member `IPreprocessorConfiguration`, fixes / supersedes [#1057](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1057).
+
 ## v18.0.1
 
 - Give each TestStep (from `@cucumber/messages`) a unique ID, fixes [#1034](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1034).

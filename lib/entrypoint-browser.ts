@@ -214,6 +214,8 @@ function createUnimplemented() {
   return new Error("Plugin methods aren't available in a browser environment");
 }
 
+export { IPreprocessorConfiguration };
+
 export function resolvePreprocessorConfiguration(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   cypressConfig: ICypressConfiguration,

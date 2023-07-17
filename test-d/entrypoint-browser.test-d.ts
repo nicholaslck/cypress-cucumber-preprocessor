@@ -9,6 +9,7 @@ import messages from "@cucumber/messages";
 
 import {
   resolvePreprocessorConfiguration,
+  IPreprocessorConfiguration,
   addCucumberPreprocessorPlugin,
   beforeRunHandler,
   afterRunHandler,
@@ -26,8 +27,6 @@ import {
   AfterStep,
   DataTable,
 } from "../lib/entrypoint-browser";
-
-import { IPreprocessorConfiguration } from "../lib/preprocessor-configuration";
 
 declare const config: Cypress.PluginConfigOptions;
 declare const on: Cypress.PluginEvents;
