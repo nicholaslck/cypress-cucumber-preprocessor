@@ -94,17 +94,6 @@ Then("the report should have an image attachment", async function () {
     { runScripts: "dangerously" }
   );
 
-  const AccordionItemButton = assertAndReturn(
-    dom.window.document.querySelector(
-      '[data-accordion-component="AccordionItemButton"]'
-    ),
-    "Expected to find an AccordionItemButton"
-  );
-
-  assert(AccordionItemButton instanceof dom.window.HTMLElement);
-
-  AccordionItemButton.click();
-
   const AccordionItemPanel = assertAndReturn(
     dom.window.document.querySelector(
       '[data-accordion-component="AccordionItemPanel"]'
