@@ -21,7 +21,8 @@ export {
 
 /**
  * Everything below exist merely for the purpose of being nice with TypeScript. All of these methods
- * are exclusively used in the browser and the browser field in package.json points to ./methods.ts.
+ * are exclusively used in the browser and the browser field in package.json points to
+ * ./lib/entrypoint-browser.ts.
  */
 function createUnimplemented() {
   return new Error("Cucumber methods aren't available in a node environment");

@@ -46,7 +46,7 @@ import { memoize } from "./helpers/memoize";
 
 const resolve = memoize(origResolve);
 
-type AddOptions = {
+export type AddOptions = {
   omitBeforeRunHandler?: boolean;
   omitAfterRunHandler?: boolean;
   omitBeforeSpecHandler?: boolean;

@@ -1,8 +1,20 @@
+/**
+ * This file is a near-copy of its sibling, entrypoint-browser.test-d.ts. Neither should be edited
+ * without a corresponding change in the other, IE. their type declarations should remain identical.
+ */
+
 import { expectType } from "tsd";
 
 import messages from "@cucumber/messages";
 
 import {
+  resolvePreprocessorConfiguration,
+  addCucumberPreprocessorPlugin,
+  beforeRunHandler,
+  afterRunHandler,
+  beforeSpecHandler,
+  afterSpecHandler,
+  afterScreenshotHandler,
   Given,
   When,
   Then,
@@ -13,7 +25,49 @@ import {
   BeforeStep,
   AfterStep,
   DataTable,
-} from "../lib/entrypoint-browser";
+} from "../lib/entrypoint-node";
+
+import { IPreprocessorConfiguration } from "../lib/preprocessor-configuration";
+
+declare const config: Cypress.PluginConfigOptions;
+declare const on: Cypress.PluginEvents;
+declare const spec: Cypress.Spec;
+declare const results: CypressCommandLine.RunResult;
+declare const details: Cypress.ScreenshotDetails;
+
+expectType<Promise<IPreprocessorConfiguration>>(
+  resolvePreprocessorConfiguration(config, {}, "/")
+);
+
+expectType<Promise<Cypress.PluginConfigOptions>>(
+  addCucumberPreprocessorPlugin(on, config)
+);
+
+expectType<Promise<Cypress.PluginConfigOptions>>(
+  addCucumberPreprocessorPlugin(on, config, {})
+);
+
+expectType<Promise<Cypress.PluginConfigOptions>>(
+  addCucumberPreprocessorPlugin(on, config, {
+    omitBeforeRunHandler: true,
+    omitAfterRunHandler: true,
+    omitBeforeSpecHandler: true,
+    omitAfterSpecHandler: true,
+    omitAfterScreenshotHandler: true,
+  })
+);
+
+expectType<Promise<void>>(beforeRunHandler(config));
+
+expectType<Promise<void>>(afterRunHandler(config));
+
+expectType<Promise<void>>(beforeSpecHandler(config, spec));
+
+expectType<Promise<void>>(afterSpecHandler(config, spec, results));
+
+expectType<Promise<Cypress.ScreenshotDetails>>(
+  afterScreenshotHandler(config, details)
+);
 
 Given("foo", function (foo, bar: number, baz: string) {
   expectType<Mocha.Context>(this);

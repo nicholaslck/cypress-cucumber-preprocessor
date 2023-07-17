@@ -1,3 +1,5 @@
+import { ICypressConfiguration } from "@badeball/cypress-configuration";
+
 import { AttachmentContentEncoding, Pickle } from "@cucumber/messages";
 
 import parse from "@cucumber/tag-expressions";
@@ -29,6 +31,13 @@ import {
   IParameterTypeDefinition,
   IStepDefinitionBody,
 } from "./public-member-types";
+
+import {
+  ConfigurationFileResolver,
+  IPreprocessorConfiguration,
+} from "./preprocessor-configuration";
+
+import { AddOptions } from "./add-cucumber-preprocessor-plugin";
 
 function defineStep<T extends unknown[], C extends Mocha.Context>(
   description: string | RegExp,
@@ -195,3 +204,79 @@ export {
   defineBeforeStep as BeforeStep,
   defineAfterStep as AfterStep,
 };
+
+/**
+ * Everything below exist merely for the purpose of being nice with TypeScript. All of these methods
+ * are exclusively used in the node environment and the node field in package.json points to
+ * ./lib/entrypoint-node.ts.
+ */
+function createUnimplemented() {
+  return new Error("Plugin methods aren't available in a browser environment");
+}
+
+export function resolvePreprocessorConfiguration(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  cypressConfig: ICypressConfiguration,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  environment: Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  implicitIntegrationFolder: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  configurationFileResolver?: ConfigurationFileResolver
+): Promise<IPreprocessorConfiguration> {
+  throw createUnimplemented();
+}
+
+export async function addCucumberPreprocessorPlugin(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  on: Cypress.PluginEvents,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  config: Cypress.PluginConfigOptions,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  options: AddOptions = {}
+): Promise<Cypress.PluginConfigOptions> {
+  throw createUnimplemented();
+}
+
+export async function beforeRunHandler(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  config: Cypress.PluginConfigOptions
+): Promise<void> {
+  throw createUnimplemented();
+}
+
+export async function afterRunHandler(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  config: Cypress.PluginConfigOptions
+): Promise<void> {
+  throw createUnimplemented();
+}
+
+export async function beforeSpecHandler(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  config: Cypress.PluginConfigOptions,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  spec: Cypress.Spec
+): Promise<void> {
+  throw createUnimplemented();
+}
+
+export async function afterSpecHandler(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  config: Cypress.PluginConfigOptions,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  spec: Cypress.Spec,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  results: CypressCommandLine.RunResult
+): Promise<void> {
+  throw createUnimplemented();
+}
+
+export async function afterScreenshotHandler(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  config: Cypress.PluginConfigOptions,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  details: Cypress.ScreenshotDetails
+): Promise<Cypress.ScreenshotDetails> {
+  throw createUnimplemented();
+}
