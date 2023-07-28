@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 - Export type member `IPreprocessorConfiguration`, fixes / supersedes [#1057](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1057).
 
+- Fix asynchronous scheduling of nested step, fixes [#1063](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1063).
+
 ## v18.0.1
 
 - Give each TestStep (from `@cucumber/messages`) a unique ID, fixes [#1034](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1034).

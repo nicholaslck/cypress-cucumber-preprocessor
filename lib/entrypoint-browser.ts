@@ -51,10 +51,12 @@ function runStepDefininition(
   text: string,
   argument?: DataTable | string
 ) {
-  runStepWithLogGroup({
-    keyword: "Step",
-    text,
-    fn: () => getRegistry().runStepDefininition(world, text, argument),
+  cy.then(() => {
+    runStepWithLogGroup({
+      keyword: "Step",
+      text,
+      fn: () => getRegistry().runStepDefininition(world, text, argument),
+    });
   });
 }
 
