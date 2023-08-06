@@ -456,6 +456,7 @@ export function combineIntoConfiguration(
 
   const stepDefinitions: IPreprocessorConfiguration["stepDefinitions"] =
     overrides.stepDefinitions ??
+    specific?.stepDefinitions ??
     unspecific.stepDefinitions ??
     defaultStepDefinitions;
 

@@ -273,6 +273,11 @@ describe("resolve()", () => {
           configuration: IPreprocessorConfiguration
         ): string | string[] => configuration.stepDefinitions;
 
+        const setValueFn = (
+          configuration: IBaseUserConfiguration,
+          value: string | string[]
+        ) => (configuration.stepDefinitions = value);
+
         it("default", () =>
           test({
             testingType,
@@ -286,50 +291,161 @@ describe("resolve()", () => {
             ],
           }));
 
-        it("override by explicit configuration (string)", () =>
-          test({
-            testingType,
-            getValueFn,
-            environment: {},
-            configuration: { stepDefinitions: "foo" },
-            expectedValue: "foo",
-          }));
+        describe("string", () => {
+          it("override by explicit, type-unspecific configuration", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: createUserConfiguration({
+                setValueFn,
+                value: "foo",
+              }),
+              expectedValue: "foo",
+            }));
 
-        it("override by explicit configuration (string[])", () =>
-          test({
-            testingType,
-            getValueFn,
-            environment: {},
-            configuration: { stepDefinitions: ["foo"] },
-            expectedValue: ["foo"],
-          }));
+          it("override by explicit, type-specific configuration", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: {
+                [testingType]: createUserConfiguration({
+                  setValueFn,
+                  value: "foo",
+                }),
+              },
+              expectedValue: "foo",
+            }));
 
-        it("override by environment (string)", () =>
-          test({
-            testingType,
-            getValueFn,
-            environment: { stepDefinitions: "foo" },
-            configuration: {},
-            expectedValue: "foo",
-          }));
+          it("override by environment", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: { stepDefinitions: "foo" },
+              configuration: {},
+              expectedValue: "foo",
+            }));
 
-        it("override by environment (string[])", () =>
-          test({
-            testingType,
-            getValueFn,
-            environment: { stepDefinitions: ["foo"] },
-            configuration: {},
-            expectedValue: ["foo"],
-          }));
+          it("precedence (environment over explicit, type-unspecific)", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: { stepDefinitions: "bar" },
+              configuration: createUserConfiguration({
+                setValueFn,
+                value: "foo",
+              }),
+              expectedValue: "bar",
+            }));
 
-        it("precedence", () =>
-          test({
-            testingType,
-            getValueFn,
-            environment: { stepDefinitions: "bar" },
-            configuration: { stepDefinitions: "foo" },
-            expectedValue: "bar",
-          }));
+          it("precedence (environment over explicit, type-specific)", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: { stepDefinitions: "bar" },
+              configuration: {
+                [testingType]: createUserConfiguration({
+                  setValueFn,
+                  value: "foo",
+                }),
+              },
+              expectedValue: "bar",
+            }));
+
+          it("precedence (explicit, type-specific over type-unspecific)", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: {
+                [testingType]: createUserConfiguration({
+                  setValueFn,
+                  value: "foo",
+                }),
+                ...createUserConfiguration({ setValueFn, value: "bar" }),
+              },
+              expectedValue: "foo",
+            }));
+        });
+
+        describe("string[]", () => {
+          it("override by explicit, type-unspecific configuration", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: createUserConfiguration({
+                setValueFn,
+                value: ["foo"],
+              }),
+              expectedValue: ["foo"],
+            }));
+
+          it("override by explicit, type-specific configuration", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: {
+                [testingType]: createUserConfiguration({
+                  setValueFn,
+                  value: ["foo"],
+                }),
+              },
+              expectedValue: ["foo"],
+            }));
+
+          it("override by environment", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: { stepDefinitions: ["foo"] },
+              configuration: {},
+              expectedValue: ["foo"],
+            }));
+
+          it("precedence (environment over explicit, type-unspecific)", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: { stepDefinitions: ["bar"] },
+              configuration: createUserConfiguration({
+                setValueFn,
+                value: ["foo"],
+              }),
+              expectedValue: ["bar"],
+            }));
+
+          it("precedence (environment over explicit, type-specific)", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: { stepDefinitions: ["bar"] },
+              configuration: {
+                [testingType]: createUserConfiguration({
+                  setValueFn,
+                  value: ["foo"],
+                }),
+              },
+              expectedValue: ["bar"],
+            }));
+
+          it("precedence (explicit, type-specific over type-unspecific)", () =>
+            test({
+              testingType,
+              getValueFn,
+              environment: {},
+              configuration: {
+                [testingType]: createUserConfiguration({
+                  setValueFn,
+                  value: ["foo"],
+                }),
+                ...createUserConfiguration({ setValueFn, value: ["bar"] }),
+              },
+              expectedValue: ["foo"],
+            }));
+        });
       });
 
       describe("messages", () => {
