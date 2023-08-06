@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v18.0.3
 
 - Allow (testing) type-specific configuration of `stepDefinitions`, fixes [#1065](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1065).
 
