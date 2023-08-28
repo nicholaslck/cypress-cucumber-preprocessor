@@ -8,10 +8,9 @@
     "skipLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node16",
     "resolveJsonModule": true,
     "target": "ES2017",
-    "module": "CommonJS",
+    "module": "nodenext",
     "types": ["node", "cypress"],
     "lib": ["dom", "ESNext"]
   },
