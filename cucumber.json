@@ -1,6 +1,5 @@
 {
   "default": {
-    "publishQuiet": true,
     "format": ["@cucumber/pretty-formatter"],
     "formatOptions": {
       "colorsEnabled": true
