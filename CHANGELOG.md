@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Add support for Cypress v13, fixes [#1084](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1084).
+
 ## v18.0.4
 
 - Update dependency on esbuild, fixes [#1068](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1068).
