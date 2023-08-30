@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v18.0.5
 
 - Add support for Cypress v13, fixes [#1084](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1084).
 
