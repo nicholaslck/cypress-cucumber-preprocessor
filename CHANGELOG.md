@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Make the compile output play nicer with ESM, relates to [#1093](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1093).
+
 ## v18.0.5
 
 - Add support for Cypress v13, fixes [#1084](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1084).

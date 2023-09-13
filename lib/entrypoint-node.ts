@@ -12,7 +12,7 @@ export {
   IPreprocessorConfiguration,
 } from "./preprocessor-configuration";
 
-export { default as addCucumberPreprocessorPlugin } from "./add-cucumber-preprocessor-plugin";
+export { addCucumberPreprocessorPlugin } from "./add-cucumber-preprocessor-plugin";
 
 export {
   beforeRunHandler,

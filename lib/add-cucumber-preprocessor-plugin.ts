@@ -77,7 +77,7 @@ export function rebuildOriginalConfigObject(
   return Object.assign({}, config, config[INTERNAL_PROPERTY_NAME]);
 }
 
-export default async function addCucumberPreprocessorPlugin(
+export async function addCucumberPreprocessorPlugin(
   on: Cypress.PluginEvents,
   config: Cypress.PluginConfigOptions,
   options: AddOptions = {}
