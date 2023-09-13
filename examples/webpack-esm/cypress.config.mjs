@@ -1,10 +1,10 @@
 import { defineConfig } from "cypress";
 import webpack from "@cypress/webpack-preprocessor";
-import preprocessor from "@badeball/cypress-cucumber-preprocessor";
+import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
 
 export async function setupNodeEvents(on, config) {
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
-  await preprocessor.addCucumberPreprocessorPlugin(on, config);
+  await addCucumberPreprocessorPlugin(on, config);
 
   on(
     "file:preprocessor",

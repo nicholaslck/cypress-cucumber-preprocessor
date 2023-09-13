@@ -1,6 +1,6 @@
 import { defineConfig } from "cypress";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
-import browserify from "@badeball/cypress-cucumber-preprocessor/browserify";
+import { preprocessor } from "@badeball/cypress-cucumber-preprocessor/browserify";
 
 async function setupNodeEvents(
   on: Cypress.PluginEvents,
@@ -11,7 +11,7 @@ async function setupNodeEvents(
 
   on(
     "file:preprocessor",
-    browserify(config, {
+    preprocessor(config, {
       typescript: require.resolve("typescript"),
     })
   );
