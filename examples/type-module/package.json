@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@badeball/cypress-cucumber-preprocessor": "file:latest",
+    "@bahmutov/cypress-esbuild-preprocessor": "latest",
+    "cypress": "latest",
+    "typescript": "latest"
+  }
+}
