@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 - Make the compile output play nicer with ESM, relates to [#1093](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1093).
 
+- Allow visiting unconfigured domains in `before` hooks, fixes [#1091](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1091).
+
 ## v18.0.5
 
 - Add support for Cypress v13, fixes [#1084](https://github.com/badeball/cypress-cucumber-preprocessor/issues/1084).
