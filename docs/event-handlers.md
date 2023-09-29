@@ -73,7 +73,7 @@ export default defineConfig({
       });
 
       on("before:spec", async (spec) => {
-        await beforeSpecHandler(config);
+        await beforeSpecHandler(config, spec);
 
         // Your own `before:spec` code goes here.
       });
